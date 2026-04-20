@@ -38,7 +38,7 @@ public class Vector3D {
     public Vector3D normalize() {
         double len = length();
         if (len == 0) return new Vector3D(0, 0, 0);
-        return new Vector3D(this.x / len, this.y / len, this.z / len);
+        return this.multiply(1.0 / len);
     }
 
     public Vector3D cross(Vector3D other) {

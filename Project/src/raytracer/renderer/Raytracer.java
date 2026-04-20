@@ -17,7 +17,7 @@ public class Raytracer {
     private int height;
     private Color backgroundColor;
 
-    public Raytracer(Scene scene, Camera camera, int width, int height, Color backgroundColor) {
+    public Raytracer(Scene scene, Camera camera, int width, int height, Color w) {
         this.scene = scene;
         this.camera = camera;
         this.width = width;
