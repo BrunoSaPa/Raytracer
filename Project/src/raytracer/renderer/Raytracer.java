@@ -5,7 +5,7 @@ import raytracer.core.Ray;
 import raytracer.core.Scene;
 import raytracer.geometry.Object3D;
 
-import raytracer.math.Color;
+import raytracer.utils.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;

@@ -1,4 +1,4 @@
-package raytracer.math;
+package raytracer.utils;
 
 
 // PD; i know this class will be better in another package, maybe utils, but for simplicity ill put it here for now :)

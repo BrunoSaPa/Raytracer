@@ -2,29 +2,31 @@ package raytracer.geometry;
 
 import raytracer.core.Instersection;
 import raytracer.core.Ray;
-import raytracer.math.Vector3D;
-import raytracer.math.Color;
+import raytracer.utils.Point3D;
+import raytracer.utils.Vector3D;
+import raytracer.utils.Color;
 
 public class Sphere implements Object3D {
-    private Vector3D center;
+    private Point3D center;
     private double radius;
     private Color color;
 
-    public Sphere(Vector3D center, double radius, Color color) {
+    public Sphere(Point3D center, double radius, Color color) {
         this.center = center;
         this.radius = radius;
         this.color = color;
     }
 
     public double getRadius() { return radius; }
-    public Vector3D getCenter() { return center; }
+    public Point3D getCenter() { return center; }
+
     @Override
     public Color getColor() { return color; }
 
     @Override
     public Instersection intersect(Ray ray) {
         //For this solution i implemented the geometric solution seen in class
-        Vector3D O = ray.getOrigin();
+        Point3D O = ray.getOrigin();
         Vector3D D = ray.getDirection();
 
         //1.vector from ray origin to sphere center
@@ -61,7 +63,7 @@ public class Sphere implements Object3D {
             return null; //both behind camera
         }
 
-        Vector3D hitPoint = ray.getPoint(t);
+        Point3D hitPoint = ray.getPoint(t);
         return new Instersection(t, hitPoint, this);
     }
 }

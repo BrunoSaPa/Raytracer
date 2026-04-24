@@ -1,20 +1,21 @@
 package raytracer.renderer;
 
 import raytracer.core.Ray;
-import raytracer.math.Vector3D;
+import raytracer.utils.Point3D;
+import raytracer.utils.Vector3D;
 
 public class Camera {
-    private Vector3D position;
-    private Vector3D forward;
+    private Point3D position;//a location in 3D space
+    private Vector3D forward;//direction vectors
     private Vector3D up;
     private Vector3D right;
-    private double fov; // in degrees
+    private double fov;
     private double nearPlane;
     private double farPlane;
     private int imageWidth;
     private int imageHeight;
 
-    public Camera(Vector3D position, Vector3D lookAt, Vector3D worldUp, double fov, double nearPlane, double farPlane, int imageWidth, int imageHeight) {
+    public Camera(Point3D position, Point3D lookAt, Vector3D worldUp, double fov, double nearPlane, double farPlane, int imageWidth, int imageHeight) {
         this.position = position;
         this.fov = fov;
         this.nearPlane = nearPlane;
@@ -22,9 +23,9 @@ public class Camera {
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
 
-        //build camera coordinate system
+        // Build camera coordinate system
+        //lookAt - position: Point - Point = Vector (direction towards target)
         this.forward = lookAt.subtract(position).normalize();
-        //importatt here, i used cross product to calculate the orthogonal (which is a vector that is perpendicular to both directions given)
         this.right = forward.cross(worldUp).normalize();
         this.up = right.cross(forward).normalize();
     }
@@ -43,5 +44,5 @@ public class Camera {
 
     public double getNearPlane() { return nearPlane; }
     public double getFarPlane() { return farPlane; }
-    public Vector3D getPosition() { return position; }
+    public Point3D getPosition() { return position; }
 }
