@@ -1,6 +1,6 @@
 package raytracer.renderer;
 
-import raytracer.core.Instersection;
+import raytracer.core.Intersection;
 import raytracer.core.Ray;
 import raytracer.core.Scene;
 import raytracer.geometry.Object3D;
@@ -45,10 +45,10 @@ public class Raytracer {
     }
 
     private Color traceRay(Ray ray) {
-        Instersection closest = null;
+        Intersection closest = null;
 
         for (Object3D obj : scene.getObjects()) {
-            Instersection hit = obj.intersect(ray);
+            Intersection hit = obj.intersect(ray);
             if (hit != null) {
                 double t = hit.getDistance();
                 // Respect near and far planes

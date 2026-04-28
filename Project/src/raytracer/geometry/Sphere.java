@@ -1,6 +1,6 @@
 package raytracer.geometry;
 
-import raytracer.core.Instersection;
+import raytracer.core.Intersection;
 import raytracer.core.Ray;
 import raytracer.utils.Point3D;
 import raytracer.utils.Vector3D;
@@ -24,7 +24,7 @@ public class Sphere implements Object3D {
     public Color getColor() { return color; }
 
     @Override
-    public Instersection intersect(Ray ray) {
+    public Intersection intersect(Ray ray) {
         //For this solution i implemented the geometric solution seen in class
         Point3D O = ray.getOrigin();
         Vector3D D = ray.getDirection();
@@ -64,6 +64,6 @@ public class Sphere implements Object3D {
         }
 
         Point3D hitPoint = ray.getPoint(t);
-        return new Instersection(t, hitPoint, this);
+        return new Intersection(t, hitPoint, this);
     }
 }
