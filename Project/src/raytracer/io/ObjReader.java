@@ -5,6 +5,7 @@ import raytracer.geometry.MeshObject3D;
 import raytracer.geometry.TriangleCullingMode;
 import raytracer.utils.Color;
 import raytracer.utils.Point3D;
+import raytracer.utils.Vector3D;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -25,6 +26,8 @@ public final class ObjReader {
 
     public static MeshObject3D loadAsMesh(String objPath, Color color, TriangleCullingMode cullingMode) throws IOException {
         List<Point3D> vertices = new ArrayList<>();
+        List<double[]> textureCoords = new ArrayList<>();
+        List<Vector3D> normals = new ArrayList<>();
         MeshObject3D mesh = new MeshObject3D(color, cullingMode);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(objPath))) {
@@ -42,8 +45,12 @@ public final class ObjReader {
 
                 if (trimmed.startsWith("v ")) {
                     parseVertex(trimmed, vertices, lineNumber);
+                } else if (trimmed.startsWith("vt ")) {
+                    parseTextureCoord(trimmed, textureCoords, lineNumber);
+                } else if (trimmed.startsWith("vn ")) {
+                    parseNormal(trimmed, normals, lineNumber);
                 } else if (trimmed.startsWith("f ")) {
-                    parseFaceAndAddTriangles(trimmed, vertices, mesh, lineNumber);
+                    parseFaceAndAddTriangles(trimmed, vertices, textureCoords, normals, mesh, lineNumber);
                 }
             }
         }
@@ -57,22 +64,52 @@ public final class ObjReader {
             throw new IllegalArgumentException("Invalid vertex at line " + lineNumber + ": " + line);
         }
 
-        double x = Double.parseDouble(parts[1]);
-        double y = Double.parseDouble(parts[2]);
-        double z = Double.parseDouble(parts[3]);
+        double x = parseDouble(parts[1], "vertex x", lineNumber);
+        double y = parseDouble(parts[2], "vertex y", lineNumber);
+        double z = parseDouble(parts[3], "vertex z", lineNumber);
         vertices.add(new Point3D(x, y, z));
     }
 
-    private static void parseFaceAndAddTriangles(String line, List<Point3D> vertices, MeshObject3D mesh, int lineNumber) {
+    private static void parseTextureCoord(String line, List<double[]> textureCoords, int lineNumber) {
+        String[] parts = line.split("\\s+");
+        if (parts.length < 3) {
+            throw new IllegalArgumentException("Invalid texture coordinate at line " + lineNumber + ": " + line);
+        }
+
+        double u = parseDouble(parts[1], "texture u", lineNumber);
+        double v = parseDouble(parts[2], "texture v", lineNumber);
+        double w = parts.length >= 4 ? parseDouble(parts[3], "texture w", lineNumber) : 0.0;
+        textureCoords.add(new double[]{u, v, w});
+    }
+
+    private static void parseNormal(String line, List<Vector3D> normals, int lineNumber) {
+        String[] parts = line.split("\\s+");
+        if (parts.length < 4) {
+            throw new IllegalArgumentException("Invalid normal at line " + lineNumber + ": " + line);
+        }
+
+        double x = parseDouble(parts[1], "normal x", lineNumber);
+        double y = parseDouble(parts[2], "normal y", lineNumber);
+        double z = parseDouble(parts[3], "normal z", lineNumber);
+        normals.add(new Vector3D(x, y, z));
+    }
+
+    private static void parseFaceAndAddTriangles(
+        String line,
+        List<Point3D> vertices,
+        List<double[]> textureCoords,
+        List<Vector3D> normals,
+        MeshObject3D mesh,
+        int lineNumber
+    ) {
         String[] parts = line.split("\\s+");
         if (parts.length < 4) {
             throw new IllegalArgumentException("Face needs at least 3 vertices at line " + lineNumber + ": " + line);
         }
 
-        //convert to 0 based since f accounts for the 0 space, i need to start the indices from 0 aswell
         int[] positionIndices = new int[parts.length - 1];
         for (int i = 1; i < parts.length; i++) {
-            positionIndices[i - 1] = parsePositionIndex(parts[i], vertices.size(), lineNumber);
+            positionIndices[i - 1] = parseFaceVertexPositionIndex(parts[i], vertices.size(), textureCoords.size(), normals.size(), lineNumber);
         }
 
         for (int i = 1; i < positionIndices.length - 1; i++) {
@@ -83,25 +120,47 @@ public final class ObjReader {
         }
     }
 
-    private static int parsePositionIndex(String faceToken, int vertexCount, int lineNumber) {
-        //since i dont account for vertex normals or textures yet, i am only concerned about their position
-        if (faceToken.contains("/")) {
-            throw new IllegalArgumentException("Only position only faces are supported (f v v v). Invalid token at line " + lineNumber + ": " + faceToken);
+    private static int parseFaceVertexPositionIndex(String faceToken, int vertexCount, int textureCount, int normalCount, int lineNumber) {
+        String[] tokenParts = faceToken.split("/", -1);
+        if (tokenParts.length < 1 || tokenParts.length > 3 || tokenParts[0].isEmpty()) {
+            throw new IllegalArgumentException("Invalid face token at line " + lineNumber + ": " + faceToken);
         }
 
-        int objIndex = Integer.parseInt(faceToken);
-        //as seen in some obj readers, index could be negative, meaning that we start backwards from the end of the vertex list, so we need to convert that to a 0 based index aswell ( https://www.scratchapixel.com/lessons/3d-basic-rendering/obj-file-format/obj-file-format.html )
-        int index = objIndex > 0 ? objIndex - 1 : vertexCount + objIndex;
+        int positionIndex = parseRequiredIndex(tokenParts[0], vertexCount, "position", lineNumber, faceToken);
 
+        if (tokenParts.length >= 2 && !tokenParts[1].isEmpty()) {
+            parseRequiredIndex(tokenParts[1], textureCount, "texture", lineNumber, faceToken);
+        }
 
-        //probe thta that index is valid and within range
-        if (index < 0 || index >= vertexCount) {
-            throw new IllegalArgumentException("Face index out of range at line " + lineNumber + ": " + faceToken);
+        if (tokenParts.length == 3 && !tokenParts[2].isEmpty()) {
+            parseRequiredIndex(tokenParts[2], normalCount, "normal", lineNumber, faceToken);
+        }
+
+        return positionIndex;
+    }
+
+    private static int parseRequiredIndex(String rawIndex, int elementCount, String label, int lineNumber, String token) {
+        int objIndex;
+        try {
+            objIndex = Integer.parseInt(rawIndex);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid " + label + " index at line " + lineNumber + ": " + token, ex);
+        }
+
+        int index = objIndex > 0 ? objIndex - 1 : elementCount + objIndex;
+
+        if (index < 0 || index >= elementCount) {
+            throw new IllegalArgumentException(label + " index out of range at line " + lineNumber + ": " + token);
         }
 
         return index;
     }
+
+    private static double parseDouble(String rawValue, String label, int lineNumber) {
+        try {
+            return Double.parseDouble(rawValue);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid " + label + " value at line " + lineNumber + ": " + rawValue, ex);
+        }
+    }
 }
-
-
-
