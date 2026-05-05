@@ -1,4 +1,5 @@
 import raytracer.core.Scene;
+import raytracer.geometry.MeshObject3D;
 import raytracer.geometry.Sphere;
 import raytracer.geometry.Triangle;
 import raytracer.geometry.TriangleCullingMode;
@@ -31,8 +32,15 @@ public class Main {
 
         if (args.length > 0) {
             try {
-                int triangleCount = ObjReader.loadIntoScene(args[0], scene);
-                System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + triangleCount);
+                MeshObject3D mesh = ObjReader.loadAsMesh(args[0], Color.WHITE, TriangleCullingMode.BACK_FACE);
+
+                //max side size to 1.5, center around origin, then place the mesh in front of the camera.
+                mesh.fitToMaxDimension(1.5);
+                Point3D centroid = mesh.getCentroidUniqueVertices();
+                mesh.translate(new Vector3D(-centroid.x, -centroid.y, -centroid.z - 4.0));
+
+                scene.addObject(mesh);
+                System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + mesh.getTriangleCount());
             } catch (Exception e) {
                 System.err.println("Failed to load OBJ: " + e.getMessage());
                 return;
