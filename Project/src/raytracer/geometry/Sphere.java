@@ -64,6 +64,7 @@ public class Sphere implements Object3D {
         }
 
         Point3D hitPoint = ray.getPoint(t);
-        return new Intersection(t, hitPoint, this);
+        Vector3D normal = hitPoint.subtract(center).normalize();
+        return new Intersection(t, hitPoint, this, normal);
     }
 }

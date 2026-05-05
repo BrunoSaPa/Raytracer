@@ -79,8 +79,9 @@ public class Triangle implements Object3D {
 
         double w = 1.0 - u - v;
         Point3D hitPoint = ray.getPoint(t);
+        Vector3D normal = getNormal();
 
         //just saving barycentric coords just so they can be used in the future
-        return new Intersection(t, hitPoint, this, u, v, w);
+        return new Intersection(t, hitPoint, this, normal, u, v, w);
     }
 }

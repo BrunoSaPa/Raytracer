@@ -161,6 +161,7 @@ public class MeshObject3D implements Object3D {
             closest.getDistance(),
             closest.getPoint(),
             this,
+            closest.getNormal(),
             closest.getBaryU(),
             closest.getBaryV(),
             closest.getBaryW()

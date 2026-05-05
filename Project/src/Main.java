@@ -4,6 +4,9 @@ import raytracer.geometry.Sphere;
 import raytracer.geometry.Triangle;
 import raytracer.geometry.TriangleCullingMode;
 import raytracer.io.ObjReader;
+import raytracer.lighting.DirectionalLight;
+import raytracer.lighting.PointLight;
+import raytracer.lighting.SpotLight;
 import raytracer.utils.Point3D;
 import raytracer.utils.Vector3D;
 import raytracer.renderer.Camera;
@@ -30,17 +33,25 @@ public class Main {
         //scene setup
         Scene scene = new Scene();
 
+        //basic lights for diffuse flat shading
+        scene.addLight(new DirectionalLight(new Vector3D(0, -1, 0), Color.WHITE, 0.6));
+
         if (args.length > 0) {
             try {
                 MeshObject3D mesh = ObjReader.loadAsMesh(args[0], Color.WHITE, TriangleCullingMode.BACK_FACE);
 
                 //max side size to 1.5, center around origin, then place the mesh in front of the camera.
-                mesh.fitToMaxDimension(1.5);
+                mesh.fitToMaxDimension(2.5);
                 Point3D centroid = mesh.getCentroidUniqueVertices();
                 mesh.translate(new Vector3D(-centroid.x, -centroid.y, -centroid.z - 4.0));
 
                 scene.addObject(mesh);
                 System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + mesh.getTriangleCount());
+
+                Sphere sphere = new Sphere(new Point3D(1, 1, -20), 40, Color.ORANGE);
+                scene.addObject(sphere);
+
+
             } catch (Exception e) {
                 System.err.println("Failed to load OBJ: " + e.getMessage());
                 return;
