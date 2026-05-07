@@ -13,16 +13,9 @@ public class Intersection {
     private double baryV;
     private double baryW;
 
-    public Intersection(double distance, Point3D point, Object3D object) {
-        this(distance, point, object, null, Double.NaN, Double.NaN, Double.NaN);
-    }
 
     public Intersection(double distance, Point3D point, Object3D object, Vector3D normal) {
         this(distance, point, object, normal, Double.NaN, Double.NaN, Double.NaN);
-    }
-
-    public Intersection(double distance, Point3D point, Object3D object, double baryU, double baryV, double baryW) {
-        this(distance, point, object, null, baryU, baryV, baryW);
     }
 
     public Intersection(double distance, Point3D point, Object3D object, Vector3D normal, double baryU, double baryV, double baryW) {

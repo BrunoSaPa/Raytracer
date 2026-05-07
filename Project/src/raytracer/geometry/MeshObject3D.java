@@ -8,22 +8,46 @@ import raytracer.utils.Vector3D;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MeshObject3D implements Object3D {
     private final List<Triangle> triangles;
     private final Color color;
     private final TriangleCullingMode cullingMode;
+    private final Map<Integer, IdentityHashMap<Point3D, Vector3D>> smoothedVertexNormalsByGroup;
+    private boolean smoothingNormalsDirty;
 
     public MeshObject3D(Color color, TriangleCullingMode cullingMode) {
         this.triangles = new ArrayList<>();
         this.color = color;
         this.cullingMode = cullingMode;
+        this.smoothedVertexNormalsByGroup = new HashMap<>();
+        this.smoothingNormalsDirty = true;
     }
 
-    public void addTriangle(Point3D v0, Point3D v1, Point3D v2) {
-        triangles.add(new Triangle(v0, v1, v2, color, cullingMode));
+    public void addTriangle(
+        Point3D v0,
+        Point3D v1,
+        Point3D v2,
+        int smoothingGroupId
+    ) {
+        addTriangle(v0, v1, v2, smoothingGroupId, null, null, null);
+    }
+
+    public void addTriangle(
+        Point3D v0,
+        Point3D v1,
+        Point3D v2,
+        int smoothingGroupId,
+        Vector3D normal0,
+        Vector3D normal1,
+        Vector3D normal2
+    ) {
+        triangles.add(new Triangle(v0, v1, v2, color, cullingMode, smoothingGroupId, normal0, normal1, normal2));
+        smoothingNormalsDirty = true;
     }
 
     public int getTriangleCount() {
@@ -60,6 +84,7 @@ public class MeshObject3D implements Object3D {
             vertex.y += delta.y;
             vertex.z += delta.z;
         }
+        smoothingNormalsDirty = true;
     }
 
     public void scaleUniform(double factor, Point3D pivot) {
@@ -72,6 +97,7 @@ public class MeshObject3D implements Object3D {
             vertex.y = pivot.y + (vertex.y - pivot.y) * factor;
             vertex.z = pivot.z + (vertex.z - pivot.z) * factor;
         }
+        smoothingNormalsDirty = true;
     }
 
     public void scaleUniformFromCentroid(double factor) {
@@ -157,14 +183,108 @@ public class MeshObject3D implements Object3D {
             return null;
         }
 
+        Vector3D shadingNormal = resolveShadingNormal(closest);
+
         return new Intersection(
             closest.getDistance(),
             closest.getPoint(),
             this,
-            closest.getNormal(),
+            shadingNormal,
             closest.getBaryU(),
             closest.getBaryV(),
             closest.getBaryW()
         );
+    }
+
+    private Vector3D resolveShadingNormal(Intersection hit) {
+
+        if (hit == null) {
+            return null;
+        }
+        //i am asumming that hit comes from a triangle, might need to change if i can do hits on quads or any other primitive
+        Triangle triangle = (Triangle) hit.getObject();
+
+        //if vertex normals are provided i will use those instead of calculating them if not provided.
+        if (triangle.hasProvidedVertexNormals() && hit.hasBarycentric()) {
+            double u = hit.getBaryU();
+            double v = hit.getBaryV();
+            double w = hit.getBaryW();
+
+            Vector3D interpolated = triangle.getNormal0().multiply(w).add(triangle.getNormal1().multiply(u)).add(triangle.getNormal2().multiply(v));
+            return interpolated.normalize();
+        }
+
+        if (triangle.getSmoothingGroupId() <= 0 || !hit.hasBarycentric()) {
+            return triangle.getNormal();
+        }
+
+        rebuildSmoothedNormalsIfNeeded();
+
+        int groupId = triangle.getSmoothingGroupId();
+        Vector3D n0 = getSmoothedNormal(triangle.getV0(), groupId, triangle.getNormal());
+        Vector3D n1 = getSmoothedNormal(triangle.getV1(), groupId, triangle.getNormal());
+        Vector3D n2 = getSmoothedNormal(triangle.getV2(), groupId, triangle.getNormal());
+
+        double u = hit.getBaryU();
+        double v = hit.getBaryV();
+        double w = hit.getBaryW();
+
+        //Moller-Trumbore barycentrics map as v0=w, v1=u, v2=v
+        Vector3D interpolated = n0.multiply(w).add(n1.multiply(u)).add(n2.multiply(v));
+        return interpolated.normalize();
+    }
+
+    private Vector3D getSmoothedNormal(Point3D vertex, int groupId, Vector3D fallback) {
+        IdentityHashMap<Point3D, Vector3D> groupNormals = smoothedVertexNormalsByGroup.get(groupId);
+        Vector3D normal = groupNormals == null ? null : groupNormals.get(vertex);
+        return normal != null ? normal : fallback;
+    }
+
+    private void rebuildSmoothedNormalsIfNeeded() {
+        if (!smoothingNormalsDirty) {
+            return;
+        }
+
+        smoothedVertexNormalsByGroup.clear();
+
+        for (Triangle triangle : getTriangles()) {
+            if (triangle.getSmoothingGroupId() <= 0) {
+                continue;
+            }
+
+            Vector3D faceNormal = triangle.getNormal();
+            accumulateSmoothedNormal(triangle.getV0(), triangle.getSmoothingGroupId(), faceNormal);
+            accumulateSmoothedNormal(triangle.getV1(), triangle.getSmoothingGroupId(), faceNormal);
+            accumulateSmoothedNormal(triangle.getV2(), triangle.getSmoothingGroupId(), faceNormal);
+        }
+
+        for (IdentityHashMap<Point3D, Vector3D> groupNormals : smoothedVertexNormalsByGroup.values()) {
+            for (Map.Entry<Point3D, Vector3D> entry : groupNormals.entrySet()) {
+                entry.setValue(entry.getValue().normalize());
+            }
+        }
+
+        smoothingNormalsDirty = false;
+    }
+
+    private void accumulateSmoothedNormal(Point3D vertex, int groupId, Vector3D faceNormal) {
+        if (vertex == null || groupId <= 0) {
+            return;
+        }
+
+        //if first time for that group create new map
+        IdentityHashMap<Point3D, Vector3D> groupNormals = smoothedVertexNormalsByGroup.computeIfAbsent(
+            groupId,
+            ignored -> new IdentityHashMap<>()
+        );
+
+        Vector3D current = groupNormals.get(vertex);
+        if (current == null) {
+            //first triangle for this vertex in this group, start with face normal
+            groupNormals.put(vertex, faceNormal);
+        } else {
+            //vertex shared, so adding the face of the normal to existing ones
+            groupNormals.put(vertex, current.add(faceNormal));
+        }
     }
 }

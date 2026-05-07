@@ -17,8 +17,8 @@ import raytracer.utils.Color;
 public class Main {
     public static void main(String[] args) {
         //image
-        int width = 1080;
-        int height = 1080;
+        int width = 1920/2;
+        int height = 1080/2;
 
         //camera
         Point3D cameraPosition = new Point3D(0, 0, .5);

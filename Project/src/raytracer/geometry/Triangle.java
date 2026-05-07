@@ -14,22 +14,60 @@ public class Triangle implements Object3D {
     private Point3D v2;
     private Color color;
     private TriangleCullingMode cullingMode;
+    private int smoothingGroupId;
+    private Vector3D normal0;
+    private Vector3D normal1;
+    private Vector3D normal2;
 
     public Triangle(Point3D v0, Point3D v1, Point3D v2, Color color) {
         this(v0, v1, v2, color, TriangleCullingMode.NONE);
     }
 
     public Triangle(Point3D v0, Point3D v1, Point3D v2, Color color, TriangleCullingMode cullingMode) {
+        this(v0, v1, v2, color, cullingMode, 0, null, null, null);
+    }
+
+    public Triangle(
+        Point3D v0,
+        Point3D v1,
+        Point3D v2,
+        Color color,
+        TriangleCullingMode cullingMode,
+        int smoothingGroupId
+    ) {
+        this(v0, v1, v2, color, cullingMode, smoothingGroupId, null, null, null);
+    }
+
+    public Triangle(
+        Point3D v0,
+        Point3D v1,
+        Point3D v2,
+        Color color,
+        TriangleCullingMode cullingMode,
+        int smoothingGroupId,
+        Vector3D normal0,
+        Vector3D normal1,
+        Vector3D normal2
+    ) {
         this.v0 = v0;
         this.v1 = v1;
         this.v2 = v2;
         this.color = color;
         this.cullingMode = cullingMode;
+        this.smoothingGroupId = smoothingGroupId;
+        this.normal0 = normal0 == null ? null : normal0.normalize();
+        this.normal1 = normal1 == null ? null : normal1.normalize();
+        this.normal2 = normal2 == null ? null : normal2.normalize();
     }
 
     public Point3D getV0() { return v0; }
     public Point3D getV1() { return v1; }
     public Point3D getV2() { return v2; }
+    public int getSmoothingGroupId() { return smoothingGroupId; }
+    public Vector3D getNormal0() { return normal0; }
+    public Vector3D getNormal1() { return normal1; }
+    public Vector3D getNormal2() { return normal2; }
+    public boolean hasProvidedVertexNormals() { return normal0 != null && normal1 != null && normal2 != null; }
     public TriangleCullingMode getCullingMode() { return cullingMode; }
 
     public void setCullingMode(TriangleCullingMode cullingMode) {
