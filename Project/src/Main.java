@@ -17,8 +17,8 @@ import raytracer.utils.Color;
 public class Main {
     public static void main(String[] args) {
         //image
-        int width = 1920/2;
-        int height = 1080/2;
+        int width = 1080;
+        int height = 1080;
 
         //camera
         Point3D cameraPosition = new Point3D(0, 0, .5);
@@ -34,7 +34,9 @@ public class Main {
         Scene scene = new Scene();
 
         //basic lights for diffuse flat shading
-        scene.addLight(new DirectionalLight(new Vector3D(0, -1, 0), Color.WHITE, 0.6));
+        //scene.addLight(new DirectionalLight(new Vector3D(0, -1, 0), Color.WHITE, 0.6));
+        //scene.addLight(new PointLight(new Point3D(0, 2, -5), Color.WHITE, 0.8));
+        scene.addLight(new SpotLight(new Point3D(0, 0, 0), new Vector3D(0, 0, -1), 5, Color.WHITE, 0.8));
 
         if (args.length > 0) {
             try {
@@ -48,7 +50,7 @@ public class Main {
                 scene.addObject(mesh);
                 System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + mesh.getTriangleCount());
 
-                Sphere sphere = new Sphere(new Point3D(1, 1, -20), 40, Color.ORANGE);
+                Sphere sphere = new Sphere(new Point3D(1, 1, -20), 40, Color.RED);
                 scene.addObject(sphere);
 
 
