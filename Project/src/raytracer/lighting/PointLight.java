@@ -40,7 +40,7 @@ public class PointLight implements Light {
 
         Vector3D toLight = toLightVector.normalize();
 
-        double attenuation = 1.0;
+        double attenuation = 1.0 / (distance * distance);
 
         return new LightSample(toLight, distance, color, intensity, attenuation, 1.0);
     }

@@ -58,7 +58,7 @@ public class SpotLight implements Light {
         double cosTheta = direction.dot(lightToPoint);
 
         double spotFactor = cosTheta >= cutoffCos ? 1.0 : 0.0;
-        double attenuation = 1.0;
+        double attenuation = 1.0 / (distance * distance);
 
         return new LightSample(toLight, distance, color, intensity, attenuation, spotFactor);
     }
