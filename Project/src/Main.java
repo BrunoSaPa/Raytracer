@@ -35,9 +35,9 @@ public class Main {
 
         //basic lights for diffuse flat shading
         //scene.addLight(new DirectionalLight(new Vector3D(0, -1, 0), Color.WHITE, 0.6));
-        scene.addLight(new PointLight(new Point3D(1, 0, 0), Color.BLUE, 5));
-        scene.addLight(new PointLight(new Point3D(-1, 0, 0), Color.RED, 5));
-        scene.addLight(new SpotLight(new Point3D(0, 0, 0), new Vector3D(0, 0, -1), 5, Color.WHITE, 10));
+        scene.addLight(new PointLight(new Point3D(1, 1, 0), Color.BLUE, 10));
+        scene.addLight(new PointLight(new Point3D(-1, -1, 0), Color.RED, 10));
+        //scene.addLight(new SpotLight(new Point3D(0, 0, 0), new Vector3D(0, 0, -1), 5, Color.WHITE, 10));
 
         if (args.length > 0) {
             try {
@@ -51,12 +51,13 @@ public class Main {
 
                 //add floor plane
                 MeshObject3D plane = ObjReader.loadAsMesh(args[1], Color.WHITE, TriangleCullingMode.BACK_FACE);
-                plane.scaleUniformFromCentroid(10);
+                plane.scaleUniformFromCentroid(20);
+                plane.translate(new Vector3D(0, 0, -1.0));
 
 
 
-                //scene.addObject(mesh);
-                //System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + mesh.getTriangleCount());
+                scene.addObject(mesh);
+                System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + mesh.getTriangleCount());
                 scene.addObject(plane);
                 System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + plane.getTriangleCount());
 

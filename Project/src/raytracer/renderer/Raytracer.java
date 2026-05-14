@@ -8,6 +8,7 @@ import raytracer.lighting.Light;
 import raytracer.lighting.LightSample;
 
 import raytracer.utils.Color;
+import raytracer.utils.Point3D;
 import raytracer.utils.Vector3D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -81,6 +82,11 @@ public class Raytracer {
                 continue;
             }
 
+            //check if the point is in shadow
+            if (isInShadow(closest.getPoint(), sample, sample.getMaxDistance())) {
+                continue;
+            }
+
             double diffuseScale = sample.getRadianceScale() * nDotL;
             Color contribution = sample.getColor().multiply(objectColor).multiply(diffuseScale);
             litColor = litColor.add(contribution);
@@ -105,5 +111,23 @@ public class Raytracer {
         }
 
         return closest;
+    }
+
+    private boolean isInShadow(Point3D point, LightSample lightSample, double maxDistance) {
+        //create a ray from the surface point towards the light
+        Ray shadowRay = new Ray(point, lightSample.getDirectionToLight());
+
+        //use a small epsilon to avoid self-intersection
+        double epsilon = 1e-4;
+
+        //check if any object intersects the shadow ray before reaching the light
+        for (Object3D obj : scene.getObjects()) {
+            Intersection hit = obj.intersect(shadowRay);
+            if (hit != null && hit.getDistance() > epsilon && hit.getDistance() < maxDistance) {
+                return true; //point is in shadow
+            }
+        }
+
+        return false; //point is not in shadow
     }
 }
