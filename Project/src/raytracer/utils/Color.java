@@ -12,6 +12,13 @@ public class Color {
     public static final Color BLUE = new Color(0, 0, 1);
     public static final Color WHITE = new Color(1, 1, 1);
     public static final Color ORANGE = new Color(1,0.5,0);
+    public static final Color MAGENTA = new Color(0.5,1,0);
+    public static final Color YELLOW = new Color(0.5,0,1);
+    public static final Color GREEN = new Color(0,1,0);
+    public static final Color CYAN = new Color(0,1,1);
+    public static final Color PURPLE = new Color(1,1,1);
+    public static final Color MAGENTA_WHITE = new Color(0,0,1);
+    public static final Color MAGENTA_ORANGE = new Color(0,0,1);
 
     public Color(double r, double g, double b) {
         this.r = r;
