@@ -10,11 +10,17 @@ public class Sphere implements Object3D {
     private Point3D center;
     private double radius;
     private Color color;
+    private double specularStrength;
+    private double shininess;
+    private Color specularColor;
 
     public Sphere(Point3D center, double radius, Color color) {
         this.center = center;
         this.radius = radius;
         this.color = color;
+        this.specularStrength = 0.0;
+        this.shininess = 32.0;
+        this.specularColor = Color.WHITE;
     }
 
     public double getRadius() { return radius; }
@@ -22,6 +28,27 @@ public class Sphere implements Object3D {
 
     @Override
     public Color getColor() { return color; }
+
+    @Override
+    public double getSpecularStrength() { return specularStrength; }
+
+    @Override
+    public double getShininess() { return shininess; }
+
+    @Override
+    public Color getSpecularColor() { return specularColor; }
+
+    public void setSpecularStrength(double specularStrength) {
+        this.specularStrength = Math.max(0.0, specularStrength);
+    }
+
+    public void setShininess(double shininess) {
+        this.shininess = Math.max(1.0, shininess);
+    }
+
+    public void setSpecularColor(Color specularColor) {
+        this.specularColor = specularColor == null ? Color.WHITE : specularColor;
+    }
 
     @Override
     public Intersection intersect(Ray ray) {

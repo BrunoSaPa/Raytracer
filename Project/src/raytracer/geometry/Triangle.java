@@ -18,6 +18,9 @@ public class Triangle implements Object3D {
     private Vector3D normal0;
     private Vector3D normal1;
     private Vector3D normal2;
+    private double specularStrength;
+    private double shininess;
+    private Color specularColor;
 
     public Triangle(Point3D v0, Point3D v1, Point3D v2, Color color) {
         this(v0, v1, v2, color, TriangleCullingMode.NONE);
@@ -58,6 +61,9 @@ public class Triangle implements Object3D {
         this.normal0 = normal0 == null ? null : normal0.normalize();
         this.normal1 = normal1 == null ? null : normal1.normalize();
         this.normal2 = normal2 == null ? null : normal2.normalize();
+        this.specularStrength = 0.0;
+        this.shininess = 32.0;
+        this.specularColor = Color.WHITE;
     }
 
     public Point3D getV0() { return v0; }
@@ -77,6 +83,33 @@ public class Triangle implements Object3D {
     @Override
     public Color getColor() {
         return color;
+    }
+
+    @Override
+    public double getSpecularStrength() {
+        return specularStrength;
+    }
+
+    @Override
+    public double getShininess() {
+        return shininess;
+    }
+
+    @Override
+    public Color getSpecularColor() {
+        return specularColor;
+    }
+
+    public void setSpecularStrength(double specularStrength) {
+        this.specularStrength = Math.max(0.0, specularStrength);
+    }
+
+    public void setShininess(double shininess) {
+        this.shininess = Math.max(1.0, shininess);
+    }
+
+    public void setSpecularColor(Color specularColor) {
+        this.specularColor = specularColor == null ? Color.WHITE : specularColor;
     }
 
     public Vector3D getNormal() {

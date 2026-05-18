@@ -24,7 +24,7 @@ public class Main {
         Point3D cameraPosition = new Point3D(0, 0, .5);
         Point3D lookAt = new Point3D(0, 0, -1); //target location
         Vector3D worldUp = new Vector3D(0, 1, 0);//direction
-        double fov = 90;//fov in deg
+        double fov = 80;//fov in deg
         double nearPlane = 0.01;
         double farPlane = 1000.0;
 
@@ -35,8 +35,8 @@ public class Main {
 
         //basic lights for diffuse flat shading
         //scene.addLight(new DirectionalLight(new Vector3D(0, -1, 0), Color.WHITE, 0.6));
-        scene.addLight(new PointLight(new Point3D(1, 1, 0), Color.BLUE, 10));
-        scene.addLight(new PointLight(new Point3D(-1, -1, 0), Color.RED, 10));
+        scene.addLight(new PointLight(new Point3D(1, 1, 0), Color.WHITE, 10));
+        scene.addLight(new PointLight(new Point3D(-1, -1, 0), Color.WHITE, 10));
         //scene.addLight(new SpotLight(new Point3D(0, 0, 0), new Vector3D(0, 0, -1), 5, Color.WHITE, 10));
 
         if (args.length > 0) {
@@ -47,12 +47,15 @@ public class Main {
                 mesh.fitToMaxDimension(2.5);
                 Point3D centroid = mesh.getCentroidUniqueVertices();
                 mesh.translate(new Vector3D(-centroid.x, -centroid.y, -centroid.z - 4.0));
+                mesh.setSpecularStrength(.9);
+                mesh.setShininess(32);
+                mesh.setSpecularColor(Color.WHITE);
 
 
                 //add floor plane
                 MeshObject3D plane = ObjReader.loadAsMesh(args[1], Color.WHITE, TriangleCullingMode.BACK_FACE);
                 plane.scaleUniformFromCentroid(20);
-                plane.translate(new Vector3D(0, 0, -1.0));
+                plane.translate(new Vector3D(0, 0, -2.0));
 
 
 
@@ -61,8 +64,11 @@ public class Main {
                 scene.addObject(plane);
                 System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + plane.getTriangleCount());
 
-                //Sphere sphere = new Sphere(new Point3D(1, 1, -20), 40, Color.RED);
-                //scene.addObject(sphere);
+                Sphere sphere = new Sphere(new Point3D(-1.5, 1.5, -3.5), .8, Color.GREEN);
+                sphere.setSpecularColor(Color.WHITE);
+                sphere.setSpecularStrength(.9);
+                sphere.setShininess(32);
+                scene.addObject(sphere);
 
 
             } catch (Exception e) {
@@ -76,6 +82,10 @@ public class Main {
             //sphere centers are points in 3D space
             Sphere sphere = new Sphere(new Point3D(1.5, 1, -5), 0.1, Color.RED);
             Sphere sphere2 = new Sphere(new Point3D(0, 1, -5), 0.25, Color.BLUE);
+            sphere.setSpecularStrength(0.35);
+            sphere.setShininess(96.0);
+            sphere2.setSpecularStrength(0.25);
+            sphere2.setShininess(64.0);
 
             //triangles (right hand)
             Triangle triangleBackCull = new Triangle(
@@ -92,6 +102,10 @@ public class Main {
                 new Point3D(0.7, -0.8, -6.0),
                 Color.BLUE
             );
+            triangleBackCull.setSpecularStrength(0.2);
+            triangleBackCull.setShininess(32.0);
+            triangleNoCull.setSpecularStrength(0.2);
+            triangleNoCull.setShininess(32.0);
 
             scene.addObject(sphere);
             scene.addObject(sphere2);

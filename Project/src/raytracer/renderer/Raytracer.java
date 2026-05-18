@@ -144,6 +144,13 @@ public class Raytracer {
 
 
         Color objectColor = closest.getObject().getColor();
+        //get values for specular
+        Color objectSpecularColor = closest.getObject().getSpecularColor();
+        double objectSpecularStrength = closest.getObject().getSpecularStrength();
+        double objectShininess = closest.getObject().getShininess();
+        boolean hasSpecular = objectSpecularStrength > 0.0;
+        //get vector from point to where ray was originated which is V in the blinn-phong model, if no specular component is needed, we can skip this calculation
+        Vector3D viewDirection = hasSpecular ? ray.getDirection().multiply(-1.0).normalize() : null;
         Color litColor = objectColor.multiply(ambient); //ambient term
 
         for (Light light : scene.getLights()) {
@@ -166,7 +173,19 @@ public class Raytracer {
 
             double diffuseScale = sample.getRadianceScale() * nDotL;
             Color contribution = sample.getColor().multiply(objectColor).multiply(diffuseScale);
-            litColor = litColor.add(contribution);
+
+            if (!hasSpecular) {
+                litColor = litColor.add(contribution);
+                continue;
+            }
+
+            Vector3D halfVector = sample.getDirectionToLight().add(viewDirection).normalize();
+            double nDotH = Math.max(0.0, normal.dot(halfVector));
+            //calculate contribution for specular
+            double specularScale = sample.getRadianceScale() * objectSpecularStrength * Math.pow(nDotH, objectShininess);
+            Color specularContribution = sample.getColor().multiply(objectSpecularColor).multiply(specularScale);
+
+            litColor = litColor.add(contribution).add(specularContribution);
         }
 
         return litColor;

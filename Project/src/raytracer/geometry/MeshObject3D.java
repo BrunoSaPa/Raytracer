@@ -19,13 +19,33 @@ public class MeshObject3D implements Object3D {
     private final TriangleCullingMode cullingMode;
     private final Map<Integer, IdentityHashMap<Point3D, Vector3D>> smoothedVertexNormalsByGroup;
     private boolean smoothingNormalsDirty;
+    private double specularStrength;
+    private double shininess;
+    private Color specularColor;
 
     public MeshObject3D(Color color, TriangleCullingMode cullingMode) {
+        this(color, cullingMode, 0.0, 32.0, Color.WHITE);
+    }
+
+    public MeshObject3D(Color color, TriangleCullingMode cullingMode, double shininess) {
+        this(color, cullingMode, 0.0, shininess, Color.WHITE);
+    }
+
+    public MeshObject3D(
+        Color color,
+        TriangleCullingMode cullingMode,
+        double specularStrength,
+        double shininess,
+        Color specularColor
+    ) {
         this.triangles = new ArrayList<>();
         this.color = color;
         this.cullingMode = cullingMode;
         this.smoothedVertexNormalsByGroup = new HashMap<>();
         this.smoothingNormalsDirty = true;
+        this.specularStrength = Math.max(0.0, specularStrength);
+        this.shininess = Math.max(1.0, shininess);
+        this.specularColor = specularColor == null ? Color.WHITE : specularColor;
     }
 
     public void addTriangle(
@@ -166,6 +186,33 @@ public class MeshObject3D implements Object3D {
     @Override
     public Color getColor() {
         return color;
+    }
+
+    @Override
+    public double getSpecularStrength() {
+        return specularStrength;
+    }
+
+    @Override
+    public double getShininess() {
+        return shininess;
+    }
+
+    @Override
+    public Color getSpecularColor() {
+        return specularColor;
+    }
+
+    public void setSpecularStrength(double specularStrength) {
+        this.specularStrength = Math.max(0.0, specularStrength);
+    }
+
+    public void setShininess(double shininess) {
+        this.shininess = Math.max(1.0, shininess);
+    }
+
+    public void setSpecularColor(Color specularColor) {
+        this.specularColor = specularColor == null ? Color.WHITE : specularColor;
     }
 
     @Override

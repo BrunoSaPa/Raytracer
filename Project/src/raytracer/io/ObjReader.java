@@ -25,10 +25,14 @@ public final class ObjReader {
     }
 
     public static MeshObject3D loadAsMesh(String objPath, Color color, TriangleCullingMode cullingMode) throws IOException {
+        return loadAsMesh(objPath, color, cullingMode, 32.0);
+    }
+
+    public static MeshObject3D loadAsMesh(String objPath, Color color, TriangleCullingMode cullingMode, double shininess) throws IOException {
         List<Point3D> vertices = new ArrayList<>();
         List<double[]> textureCoords = new ArrayList<>();
         List<Vector3D> normals = new ArrayList<>();
-        MeshObject3D mesh = new MeshObject3D(color, cullingMode);
+        MeshObject3D mesh = new MeshObject3D(color, cullingMode, shininess);
         int currentSmoothingGroupId = 0;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(objPath))) {
