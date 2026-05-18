@@ -32,6 +32,7 @@ public class Raytracer {
     private final int threadCount;
     private final int tileSize;
     static final double SHADOW_EPSILON = 1e-4;
+    static final float ambient =  0.05f;
 
     public Raytracer(Scene scene, Camera camera, int width, int height, Color backgroundColor) {
         this(scene, camera, width, height, backgroundColor, Math.max(1, Runtime.getRuntime().availableProcessors()), 32);
@@ -143,7 +144,7 @@ public class Raytracer {
 
 
         Color objectColor = closest.getObject().getColor();
-        Color litColor = Color.BLACK; //(0,0,0 so well just add whatever color it hits for contributions)
+        Color litColor = objectColor.multiply(ambient); //ambient term
 
         for (Light light : scene.getLights()) {
             LightSample sample = light.sampleAt(closest.getPoint());

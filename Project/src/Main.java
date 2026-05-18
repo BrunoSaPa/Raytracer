@@ -24,7 +24,7 @@ public class Main {
         Point3D cameraPosition = new Point3D(0, 0, .5);
         Point3D lookAt = new Point3D(0, 0, -1); //target location
         Vector3D worldUp = new Vector3D(0, 1, 0);//direction
-        double fov = 60;//fov in deg
+        double fov = 90;//fov in deg
         double nearPlane = 0.01;
         double farPlane = 1000.0;
 
