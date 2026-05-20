@@ -3,7 +3,6 @@ package raytracer.renderer;
 import raytracer.core.Intersection;
 import raytracer.core.Ray;
 import raytracer.core.Scene;
-import raytracer.geometry.Object3D;
 import raytracer.lighting.Light;
 import raytracer.lighting.LightSample;
 
@@ -192,36 +191,13 @@ public class Raytracer {
     }
 
     private Intersection findClosestIntersection(Ray ray, double minDistance, double maxDistance) {
-        Intersection closest = null;
-
-        for (Object3D obj : scene.getObjects()) {
-            Intersection hit = obj.intersect(ray);
-            if (hit == null) {
-                continue;
-            }
-
-            double t = hit.getDistance();
-            if (t >= minDistance && t <= maxDistance && (closest == null || t < closest.getDistance())) {
-                closest = hit;
-            }
-        }
-
-        return closest;
+        return scene.intersect(ray, minDistance, maxDistance);
     }
 
     private boolean isInShadow(Point3D point, LightSample lightSample, double maxDistance) {
         //offset the origin slightly along the light direction to reduce self shadow
         Point3D origin = point.add(lightSample.getDirectionToLight().multiply(SHADOW_EPSILON));
         Ray shadowRay = new Ray(origin, lightSample.getDirectionToLight());
-
-        //check if any object intersects the shadow ray before reaching the light
-        for (Object3D obj : scene.getObjects()) {
-            Intersection hit = obj.intersect(shadowRay);
-            if (hit != null && hit.getDistance() > SHADOW_EPSILON && hit.getDistance() < maxDistance) {
-                return true; //point is in shadow
-            }
-        }
-
-        return false; //point is not in shadow
+        return scene.intersect(shadowRay, SHADOW_EPSILON, maxDistance) != null;
     }
 }

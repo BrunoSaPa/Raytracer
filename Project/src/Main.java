@@ -34,21 +34,22 @@ public class Main {
         Scene scene = new Scene();
 
         //basic lights for diffuse flat shading
-        //scene.addLight(new DirectionalLight(new Vector3D(0, -1, 0), Color.WHITE, 0.6));
+        scene.addLight(new DirectionalLight(new Vector3D(0, 0 , -1), Color.WHITE, .1));
         scene.addLight(new PointLight(new Point3D(1, 1, 0), Color.WHITE, 10));
         scene.addLight(new PointLight(new Point3D(-1, -1, 0), Color.WHITE, 10));
         //scene.addLight(new SpotLight(new Point3D(0, 0, 0), new Vector3D(0, 0, -1), 5, Color.WHITE, 10));
 
         if (args.length > 0) {
             try {
-                MeshObject3D mesh = ObjReader.loadAsMesh(args[0], Color.RED, TriangleCullingMode.BACK_FACE);
+                MeshObject3D mesh = ObjReader.loadAsMesh(args[0], Color.BLUE, TriangleCullingMode.NONE);
 
                 //max side size to 1.5, center around origin, then place the mesh in front of the camera.
-                mesh.fitToMaxDimension(2.5);
+                mesh.fitToMaxDimension(5);
                 Point3D centroid = mesh.getCentroidUniqueVertices();
                 mesh.translate(new Vector3D(-centroid.x, -centroid.y, -centroid.z - 4.0));
-                mesh.setSpecularStrength(.9);
-                mesh.setShininess(32);
+                mesh.rotateYFromCentroid(90);
+                mesh.setSpecularStrength(1);
+                mesh.setShininess(64);
                 mesh.setSpecularColor(Color.WHITE);
 
 
@@ -64,7 +65,7 @@ public class Main {
                 scene.addObject(plane);
                 System.out.println("Loaded OBJ as one Object3D mesh with triangles: " + plane.getTriangleCount());
 
-                Sphere sphere = new Sphere(new Point3D(-1.5, 1.5, -3.5), .8, Color.GREEN);
+                Sphere sphere = new Sphere(new Point3D(0, 2.5, -4), .8, Color.GREEN);
                 sphere.setSpecularColor(Color.WHITE);
                 sphere.setSpecularStrength(.9);
                 sphere.setShininess(32);

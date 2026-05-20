@@ -1,5 +1,6 @@
 package raytracer.geometry;
 
+import raytracer.accel.AABB;
 import raytracer.core.Intersection;
 import raytracer.core.Ray;
 import raytracer.utils.Color;
@@ -116,6 +117,23 @@ public class Triangle implements Object3D {
         Vector3D edge1 = v1.subtract(v0);
         Vector3D edge2 = v2.subtract(v0);
         return edge1.cross(edge2).normalize();
+    }
+
+    public Point3D getCentroid() {
+        return new Point3D(
+            (v0.x + v1.x + v2.x) / 3.0,
+            (v0.y + v1.y + v2.y) / 3.0,
+            (v0.z + v1.z + v2.z) / 3.0
+        );
+    }
+
+    @Override
+    public AABB getBounds() {
+        AABB bounds = new AABB();
+        bounds.include(v0);
+        bounds.include(v1);
+        bounds.include(v2);
+        return bounds;
     }
 
     @Override

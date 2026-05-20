@@ -1,5 +1,6 @@
 package raytracer.geometry;
 
+import raytracer.accel.AABB;
 import raytracer.core.Intersection;
 import raytracer.core.Ray;
 import raytracer.utils.Point3D;
@@ -93,5 +94,17 @@ public class Sphere implements Object3D {
         Point3D hitPoint = ray.getPoint(t);
         Vector3D normal = hitPoint.subtract(center).normalize();
         return new Intersection(t, hitPoint, this, normal);
+    }
+
+    @Override
+    public AABB getBounds() {
+        return new AABB(
+            center.x - radius,
+            center.y - radius,
+            center.z - radius,
+            center.x + radius,
+            center.y + radius,
+            center.z + radius
+        );
     }
 }

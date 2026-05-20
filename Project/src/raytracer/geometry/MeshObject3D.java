@@ -1,5 +1,8 @@
 package raytracer.geometry;
 
+import raytracer.accel.AABB;
+import raytracer.accel.BinnedSahBvh;
+import raytracer.accel.BoundsOps;
 import raytracer.core.Intersection;
 import raytracer.core.Ray;
 import raytracer.utils.Color;
@@ -22,6 +25,8 @@ public class MeshObject3D implements Object3D {
     private double specularStrength;
     private double shininess;
     private Color specularColor;
+    private BinnedSahBvh triangleBvh;
+    private boolean bvhDirty;
 
     public MeshObject3D(Color color, TriangleCullingMode cullingMode) {
         this(color, cullingMode, 0.0, 32.0, Color.WHITE);
@@ -46,6 +51,7 @@ public class MeshObject3D implements Object3D {
         this.specularStrength = Math.max(0.0, specularStrength);
         this.shininess = Math.max(1.0, shininess);
         this.specularColor = specularColor == null ? Color.WHITE : specularColor;
+        this.bvhDirty = true;
     }
 
     public void addTriangle(
@@ -68,6 +74,7 @@ public class MeshObject3D implements Object3D {
     ) {
         triangles.add(new Triangle(v0, v1, v2, color, cullingMode, smoothingGroupId, normal0, normal1, normal2));
         smoothingNormalsDirty = true;
+        bvhDirty = true;
     }
 
     public int getTriangleCount() {
@@ -105,6 +112,7 @@ public class MeshObject3D implements Object3D {
             vertex.z += delta.z;
         }
         smoothingNormalsDirty = true;
+        bvhDirty = true;
     }
 
     public void scaleUniform(double factor, Point3D pivot) {
@@ -118,6 +126,7 @@ public class MeshObject3D implements Object3D {
             vertex.z = pivot.z + (vertex.z - pivot.z) * factor;
         }
         smoothingNormalsDirty = true;
+        bvhDirty = true;
     }
 
     public void scaleUniformFromCentroid(double factor) {
@@ -134,33 +143,18 @@ public class MeshObject3D implements Object3D {
             return;
         }
 
-        double minX = Double.POSITIVE_INFINITY;
-        double minY = Double.POSITIVE_INFINITY;
-        double minZ = Double.POSITIVE_INFINITY;
-        double maxX = Double.NEGATIVE_INFINITY;
-        double maxY = Double.NEGATIVE_INFINITY;
-        double maxZ = Double.NEGATIVE_INFINITY;
-
-        for (Point3D vertex : vertices) {
-            minX = Math.min(minX, vertex.x);
-            minY = Math.min(minY, vertex.y);
-            minZ = Math.min(minZ, vertex.z);
-            maxX = Math.max(maxX, vertex.x);
-            maxY = Math.max(maxY, vertex.y);
-            maxZ = Math.max(maxZ, vertex.z);
-        }
-
-        double extentX = maxX - minX;
-        double extentY = maxY - minY;
-        double extentZ = maxZ - minZ;
-        //get biggest side
-        double maxExtent = Math.max(extentX, Math.max(extentY, extentZ));
+        AABB bounds = BoundsOps.fromPoints(vertices);
+        double maxExtent = bounds.maxExtent();
 
         if (maxExtent <= 0.0) {
             return;
         }
 
         scaleUniformFromCentroid(targetSize / maxExtent);
+    }
+
+    public AABB getBoundsUniqueVertices() {
+        return BoundsOps.fromPoints(getUniqueVertexReferences());
     }
 
     private List<Point3D> getUniqueVertexReferences() {
@@ -217,14 +211,11 @@ public class MeshObject3D implements Object3D {
 
     @Override
     public Intersection intersect(Ray ray) {
-        Intersection closest = null;
+        rebuildBvhIfNeeded();
 
-        for (Triangle triangle : getTriangles()) {
-            Intersection hit = triangle.intersect(ray);
-            if (hit != null && (closest == null || hit.getDistance() < closest.getDistance())) {
-                closest = hit;
-            }
-        }
+        Intersection closest = triangleBvh != null
+            ? triangleBvh.intersect(ray, 0.0, Double.POSITIVE_INFINITY)
+            : null;
 
         if (closest == null) {
             return null;
@@ -241,6 +232,15 @@ public class MeshObject3D implements Object3D {
             closest.getBaryV(),
             closest.getBaryW()
         );
+    }
+
+    private void rebuildBvhIfNeeded() {
+        if (!bvhDirty) {
+            return;
+        }
+
+        triangleBvh = triangles.isEmpty() ? null : new BinnedSahBvh(triangles);
+        bvhDirty = false;
     }
 
     private Vector3D resolveShadingNormal(Intersection hit) {
@@ -333,5 +333,78 @@ public class MeshObject3D implements Object3D {
             //vertex shared, so adding the face of the normal to existing ones
             groupNormals.put(vertex, current.add(faceNormal));
         }
+    }
+
+    @Override
+    public AABB getBounds() {
+        return getBoundsUniqueVertices();
+    }
+
+    public void rotateX(double angleDegrees, Point3D pivot) {
+        rotateAroundAxis(angleDegrees, pivot, Axis.X);
+    }
+
+    public void rotateY(double angleDegrees, Point3D pivot) {
+        rotateAroundAxis(angleDegrees, pivot, Axis.Y);
+    }
+
+    public void rotateZ(double angleDegrees, Point3D pivot) {
+        rotateAroundAxis(angleDegrees, pivot, Axis.Z);
+    }
+
+    public void rotateXFromCentroid(double angleDegrees) {
+        rotateX(angleDegrees, getCentroidUniqueVertices());
+    }
+
+    public void rotateYFromCentroid(double angleDegrees) {
+        rotateY(angleDegrees, getCentroidUniqueVertices());
+    }
+
+    public void rotateZFromCentroid(double angleDegrees) {
+        rotateZ(angleDegrees, getCentroidUniqueVertices());
+    }
+
+    private void rotateAroundAxis(double angleDegrees, Point3D pivot, Axis axis) {
+        if (pivot == null) {
+            throw new IllegalArgumentException("Rotation pivot cannot be null.");
+        }
+
+        double radians = Math.toRadians(angleDegrees);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        for (Point3D vertex : getUniqueVertexReferences()) {
+            double dx = vertex.x - pivot.x;
+            double dy = vertex.y - pivot.y;
+            double dz = vertex.z - pivot.z;
+
+            double rx = dx;
+            double ry = dy;
+            double rz = dz;
+
+            if (axis == Axis.X) {
+                ry = dy * cos - dz * sin;
+                rz = dy * sin + dz * cos;
+            } else if (axis == Axis.Y) {
+                rx = dx * cos + dz * sin;
+                rz = -dx * sin + dz * cos;
+            } else {
+                rx = dx * cos - dy * sin;
+                ry = dx * sin + dy * cos;
+            }
+
+            vertex.x = pivot.x + rx;
+            vertex.y = pivot.y + ry;
+            vertex.z = pivot.z + rz;
+        }
+
+        smoothingNormalsDirty = true;
+        bvhDirty = true;
+    }
+
+    private enum Axis {
+        X,
+        Y,
+        Z
     }
 }
