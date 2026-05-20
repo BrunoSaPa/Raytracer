@@ -1,0 +1,28 @@
+# Camera
+camera position 0 0 0.5
+camera lookAt 0 0 -1
+camera up 0 1 0
+camera fov 80
+camera near 0.01
+camera far 1000
+
+# Render
+render width 1080
+render height 1080
+render background 0 0 0
+render output output/render.png
+render threads 8
+render tile 32
+
+# Lights
+light directional 0 0 -1 1 1 1 0.1
+light point 1 1 0 1 1 1 10
+light point -1 -1 0 1 1 1 10
+
+# Meshes
+mesh mesh/bunny.obj 0 0 1 none fit=5 translate=0,0,-4 rotate=0,90,0 spec=1 shininess=64 speccolor=1,1,1
+mesh mesh/testcube.obj 1 1 1 back scale=20 translate=0,0,-2
+
+# Optional primitives
+sphere 0 2.5 -4 0.8 0 1 0 spec=0.9 shininess=32 speccolor=1,1,1
+

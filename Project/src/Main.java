@@ -4,6 +4,8 @@ import raytracer.geometry.Sphere;
 import raytracer.geometry.Triangle;
 import raytracer.geometry.TriangleCullingMode;
 import raytracer.io.ObjReader;
+import raytracer.io.scene.SceneFileLoader;
+import raytracer.io.scene.SceneLoadResult;
 import raytracer.lighting.DirectionalLight;
 import raytracer.lighting.PointLight;
 import raytracer.lighting.SpotLight;
@@ -16,6 +18,26 @@ import raytracer.utils.Color;
 
 public class Main {
     public static void main(String[] args) {
+        if (args.length >= 2 && "--scene".equals(args[0])) {
+            try {
+                SceneLoadResult loaded = SceneFileLoader.load(args[1]);
+                Raytracer raytracer = new Raytracer(
+                    loaded.getScene(),
+                    loaded.getCamera(),
+                    loaded.getWidth(),
+                    loaded.getHeight(),
+                    loaded.getBackgroundColor(),
+                    loaded.getThreadCount(),
+                    loaded.getTileSize()
+                );
+                raytracer.render(loaded.getOutputPath());
+            } catch (Exception e) {
+                System.err.println("Failed to load scene file: " + e.getMessage());
+                e.printStackTrace();
+            }
+            return;
+        }
+
         //image
         int width = 1080;
         int height = 1080;
