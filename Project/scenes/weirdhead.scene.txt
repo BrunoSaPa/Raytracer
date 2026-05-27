@@ -1,0 +1,24 @@
+# Skull scene (uses OBJ + MTL from mesh/skull)
+
+# Camera
+camera position 0 0 -0.5
+camera lookAt 0 0.15 -3.0
+camera up 0 1 0
+camera fov 70
+camera near 0.01
+camera far 1000
+
+# Render
+render width 2160
+render height 2160
+render background 0.02 0.02 0.03
+render output output/head.png
+
+# Lights
+light directional 0 0 -1 1 1 1 0.4
+light point 0 5 1 1 1 1 20
+
+
+# head mesh
+mesh mesh/lphead/head.OBJ 1 1 1 none fit=3 rotate=0,335,0 translate=0,0,-2.2
+

@@ -1,6 +1,7 @@
 package raytracer.io.scene;
 
 import raytracer.core.Scene;
+import raytracer.geometry.MeshGroup3D;
 import raytracer.geometry.MeshObject3D;
 import raytracer.geometry.Sphere;
 import raytracer.geometry.TriangleCullingMode;
@@ -8,6 +9,8 @@ import raytracer.io.ObjReader;
 import raytracer.lighting.DirectionalLight;
 import raytracer.lighting.PointLight;
 import raytracer.lighting.SpotLight;
+import raytracer.material.Material;
+import raytracer.material.Texture2D;
 import raytracer.renderer.Camera;
 import raytracer.utils.Color;
 import raytracer.utils.Point3D;
@@ -17,7 +20,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public final class SceneFileLoader {
     private static final int DEFAULT_WIDTH = 1080;
@@ -42,6 +49,7 @@ public final class SceneFileLoader {
         double fov = 80.0;
         double near = 0.01;
         double far = 1000.0;
+        Map<String, Material> materialsByName = new HashMap<>();
 
         File baseDir = new File(filePath).getAbsoluteFile().getParentFile();
 
@@ -55,7 +63,7 @@ public final class SceneFileLoader {
                     continue;
                 }
 
-                String[] tokens = trimmed.split("\\s+");
+                String[] tokens = tokenize(trimmed);
                 if (tokens.length < 3) {
                     throw parseError(lineNumber, "Expected at least 3 tokens.");
                 }
@@ -132,9 +140,11 @@ public final class SceneFileLoader {
                         throw parseError(lineNumber, "Unknown light type: " + key);
                     }
                 } else if ("mesh".equals(category)) {
-                    parseMeshLine(scene, tokens, lineNumber, baseDir);
+                    parseMeshLine(scene, tokens, lineNumber, baseDir, materialsByName);
                 } else if ("sphere".equals(category)) {
-                    parseSphereLine(scene, tokens, lineNumber);
+                    parseSphereLine(scene, tokens, lineNumber, baseDir, materialsByName);
+                } else if ("material".equals(category)) {
+                    parseMaterialLine(materialsByName, tokens, lineNumber, baseDir);
                 } else {
                     throw parseError(lineNumber, "Unknown category: " + category);
                 }
@@ -147,8 +157,14 @@ public final class SceneFileLoader {
         return new SceneLoadResult(scene, camera, width, height, background, outputPath, threadCount, tileSize);
     }
 
-    private static void parseMeshLine(Scene scene, String[] tokens, int lineNumber, File baseDir) throws IOException {
-        requireTokenCount(tokens, 7, lineNumber, "mesh path r g b culling [options]");
+    private static void parseMeshLine(
+        Scene scene,
+        String[] tokens,
+        int lineNumber,
+        File baseDir,
+        Map<String, Material> materialsByName
+    ) throws IOException {
+        requireTokenCount(tokens, 6, lineNumber, "mesh path r g b culling [options]");
 
         String rawPath = tokens[1];
         File meshFile = resolvePath(rawPath, baseDir);
@@ -160,9 +176,8 @@ public final class SceneFileLoader {
         double scale = 1.0;
         Vector3D translate = new Vector3D(0, 0, 0);
         Vector3D rotate = new Vector3D(0, 0, 0);
-        double specular = 0.0;
-        double shininess = 32.0;
-        Color specColor = Color.WHITE;
+        MaterialOverrides overrides = new MaterialOverrides();
+        String materialName = null;
 
         for (int i = 6; i < tokens.length; i++) {
             String[] kv = tokens[i].split("=", 2);
@@ -182,41 +197,70 @@ public final class SceneFileLoader {
             } else if ("rotate".equals(option)) {
                 rotate = parseCsvVector(value, lineNumber, "mesh rotate");
             } else if ("spec".equals(option)) {
-                specular = parseDouble(value, lineNumber, "mesh spec");
+                overrides.specularStrength = parseDouble(value, lineNumber, "mesh spec");
             } else if ("shininess".equals(option)) {
-                shininess = parseDouble(value, lineNumber, "mesh shininess");
+                overrides.shininess = parseDouble(value, lineNumber, "mesh shininess");
+            } else if ("roughness".equals(option)) {
+                overrides.roughness = parseDouble(value, lineNumber, "mesh roughness");
+            } else if ("normalstrength".equals(option)) {
+                overrides.normalStrength = parseDouble(value, lineNumber, "mesh normalstrength");
             } else if ("speccolor".equals(option)) {
-                specColor = parseCsvColor(value, lineNumber, "mesh speccolor");
+                overrides.specularColor = parseCsvColor(value, lineNumber, "mesh speccolor");
+            } else if ("material".equals(option)) {
+                materialName = value.toLowerCase(Locale.ROOT);
+            } else if ("albedomap".equals(option)) {
+                overrides.albedoMapPath = value;
+                overrides.albedoMapSet = true;
+            } else if ("normalmap".equals(option)) {
+                overrides.normalMapPath = value;
+                overrides.normalMapSet = true;
+            } else if ("roughnessmap".equals(option)) {
+                overrides.roughnessMapPath = value;
+                overrides.roughnessMapSet = true;
             } else {
                 throw parseError(lineNumber, "Unknown mesh option: " + option);
             }
         }
 
-        MeshObject3D mesh = ObjReader.loadAsMesh(meshFile.getPath(), color, cullingMode, shininess);
+        double loadShininess = overrides.shininess != null ? overrides.shininess : 32.0;
+        List<MeshObject3D> meshes = ObjReader.loadAsMeshes(meshFile.getPath(), color, cullingMode, loadShininess);
+        MeshGroup3D meshGroup = new MeshGroup3D(meshes);
+
         if (fit > 0.0) {
-            mesh.fitToMaxDimension(fit);
+            meshGroup.fitToMaxDimension(fit);
         }
         if (scale != 1.0) {
-            mesh.scaleUniformFromCentroid(scale);
+            meshGroup.scaleUniformFromCentroid(scale);
         }
+
+        Point3D rotationPivot = meshGroup.getCentroid();
         if (rotate.x != 0.0) {
-            mesh.rotateXFromCentroid(rotate.x);
+            meshGroup.rotateX(rotate.x, rotationPivot);
         }
         if (rotate.y != 0.0) {
-            mesh.rotateYFromCentroid(rotate.y);
+            meshGroup.rotateY(rotate.y, rotationPivot);
         }
         if (rotate.z != 0.0) {
-            mesh.rotateZFromCentroid(rotate.z);
+            meshGroup.rotateZ(rotate.z, rotationPivot);
         }
         if (translate.x != 0.0 || translate.y != 0.0 || translate.z != 0.0) {
-            mesh.translate(translate);
+            meshGroup.translate(translate);
         }
-        mesh.setSpecularStrength(specular);
-        mesh.setShininess(shininess);
-        mesh.setSpecularColor(specColor);
 
-        scene.addObject(mesh);
+        Material namedMaterial = resolveMaterial(materialName, materialsByName, lineNumber);
+        if (namedMaterial != null || overrides.hasAnyOverride()) {
+            ResolvedMaterialOverrides resolvedOverrides = resolveMaterialOverrides(overrides, baseDir);
+            for (MeshObject3D mesh : meshes) {
+                Material baseMaterial = namedMaterial != null ? namedMaterial : mesh.getMaterial();
+                mesh.setMaterial(applyMaterialOverrides(baseMaterial, resolvedOverrides, color));
+            }
+        }
+
+        for (MeshObject3D mesh : meshes) {
+            scene.addObject(mesh);
+        }
     }
+
 
     private static File resolvePath(String rawPath, File baseDir) {
         File direct = new File(rawPath);
@@ -229,16 +273,21 @@ public final class SceneFileLoader {
         return new File(baseDir, rawPath);
     }
 
-    private static void parseSphereLine(Scene scene, String[] tokens, int lineNumber) {
-        requireTokenCount(tokens, 9, lineNumber, "sphere cx cy cz radius r g b [options]");
+    private static void parseSphereLine(
+        Scene scene,
+        String[] tokens,
+        int lineNumber,
+        File baseDir,
+        Map<String, Material> materialsByName
+    ) throws IOException {
+        requireTokenCount(tokens, 8, lineNumber, "sphere cx cy cz radius r g b [options]");
 
         Point3D center = parsePoint(tokens, 1, lineNumber);
         double radius = parseDouble(tokens[4], lineNumber, "sphere radius");
         Color color = parseColor(tokens, 5, lineNumber);
 
-        double specular = 0.0;
-        double shininess = 32.0;
-        Color specColor = Color.WHITE;
+        MaterialOverrides overrides = new MaterialOverrides();
+        String materialName = null;
 
         for (int i = 8; i < tokens.length; i++) {
             String[] kv = tokens[i].split("=", 2);
@@ -249,21 +298,190 @@ public final class SceneFileLoader {
             String option = kv[0].toLowerCase(Locale.ROOT);
             String value = kv[1];
             if ("spec".equals(option)) {
-                specular = parseDouble(value, lineNumber, "sphere spec");
+                overrides.specularStrength = parseDouble(value, lineNumber, "sphere spec");
             } else if ("shininess".equals(option)) {
-                shininess = parseDouble(value, lineNumber, "sphere shininess");
+                overrides.shininess = parseDouble(value, lineNumber, "sphere shininess");
+            } else if ("roughness".equals(option)) {
+                overrides.roughness = parseDouble(value, lineNumber, "sphere roughness");
+            } else if ("normalstrength".equals(option)) {
+                overrides.normalStrength = parseDouble(value, lineNumber, "sphere normalstrength");
             } else if ("speccolor".equals(option)) {
-                specColor = parseCsvColor(value, lineNumber, "sphere speccolor");
+                overrides.specularColor = parseCsvColor(value, lineNumber, "sphere speccolor");
+            } else if ("material".equals(option)) {
+                materialName = value.toLowerCase(Locale.ROOT);
+            } else if ("albedomap".equals(option)) {
+                overrides.albedoMapPath = value;
+                overrides.albedoMapSet = true;
+            } else if ("normalmap".equals(option)) {
+                overrides.normalMapPath = value;
+                overrides.normalMapSet = true;
+            } else if ("roughnessmap".equals(option)) {
+                overrides.roughnessMapPath = value;
+                overrides.roughnessMapSet = true;
             } else {
                 throw parseError(lineNumber, "Unknown sphere option: " + option);
             }
         }
 
         Sphere sphere = new Sphere(center, radius, color);
-        sphere.setSpecularStrength(specular);
-        sphere.setShininess(shininess);
-        sphere.setSpecularColor(specColor);
+        Material namedMaterial = resolveMaterial(materialName, materialsByName, lineNumber);
+        if (namedMaterial != null || overrides.hasAnyOverride()) {
+            ResolvedMaterialOverrides resolvedOverrides = resolveMaterialOverrides(overrides, baseDir);
+            Material baseMaterial = namedMaterial != null ? namedMaterial : sphere.getMaterial();
+            sphere.setMaterial(applyMaterialOverrides(baseMaterial, resolvedOverrides, color));
+        }
         scene.addObject(sphere);
+    }
+
+    private static void parseMaterialLine(
+        Map<String, Material> materialsByName,
+        String[] tokens,
+        int lineNumber,
+        File baseDir
+    ) throws IOException {
+        requireTokenCount(tokens, 3, lineNumber, "material name r g b [options] OR material name inherit=baseName [options]");
+        String name = tokens[1].toLowerCase(Locale.ROOT);
+        Color explicitBaseColor = null;
+        String inheritName = null;
+        int optionsStart;
+
+        if (tokens.length >= 5 && !tokens[2].contains("=") && !tokens[3].contains("=") && !tokens[4].contains("=")) {
+            explicitBaseColor = parseColor(tokens, 2, lineNumber);
+            optionsStart = 5;
+        } else if (isInheritToken(tokens[2])) {
+            inheritName = parseInheritName(tokens[2], lineNumber, "material inherit");
+            optionsStart = 3;
+        } else {
+            throw parseError(lineNumber, "Invalid material syntax. Use RGB base color or inherit=baseName.");
+        }
+
+        MaterialOverrides overrides = new MaterialOverrides();
+
+        for (int i = optionsStart; i < tokens.length; i++) {
+            String[] kv = tokens[i].split("=", 2);
+            if (kv.length != 2) {
+                throw parseError(lineNumber, "Invalid material option token: " + tokens[i]);
+            }
+            String option = kv[0].toLowerCase(Locale.ROOT);
+            String value = kv[1];
+            if ("inherit".equals(option)) {
+                inheritName = parseInheritName(tokens[i], lineNumber, "material inherit");
+            } else if ("spec".equals(option)) {
+                overrides.specularStrength = parseDouble(value, lineNumber, "material spec");
+            } else if ("shininess".equals(option)) {
+                overrides.shininess = parseDouble(value, lineNumber, "material shininess");
+            } else if ("roughness".equals(option)) {
+                overrides.roughness = parseDouble(value, lineNumber, "material roughness");
+            } else if ("normalstrength".equals(option)) {
+                overrides.normalStrength = parseDouble(value, lineNumber, "material normalstrength");
+            } else if ("speccolor".equals(option)) {
+                overrides.specularColor = parseCsvColor(value, lineNumber, "material speccolor");
+            } else if ("albedomap".equals(option)) {
+                overrides.albedoMapPath = value;
+                overrides.albedoMapSet = true;
+            } else if ("normalmap".equals(option)) {
+                overrides.normalMapPath = value;
+                overrides.normalMapSet = true;
+            } else if ("roughnessmap".equals(option)) {
+                overrides.roughnessMapPath = value;
+                overrides.roughnessMapSet = true;
+            } else {
+                throw parseError(lineNumber, "Unknown material option: " + option);
+            }
+        }
+
+        Material inheritedBase = resolveMaterial(inheritName, materialsByName, lineNumber);
+        Color fallbackBaseColor = explicitBaseColor != null
+            ? explicitBaseColor
+            : (inheritedBase != null ? inheritedBase.getBaseColor() : Color.WHITE);
+
+        ResolvedMaterialOverrides resolvedOverrides = resolveMaterialOverrides(overrides, baseDir);
+        Material material = applyMaterialOverrides(inheritedBase, resolvedOverrides, fallbackBaseColor);
+        materialsByName.put(name, material);
+    }
+
+    private static Material applyMaterialOverrides(Material baseMaterial, ResolvedMaterialOverrides overrides, Color fallbackBaseColor) {
+        Color baseColor = baseMaterial != null ? baseMaterial.getBaseColor() : fallbackBaseColor;
+        double specular = baseMaterial != null ? baseMaterial.getSpecularStrength() : 0.0;
+        double shininess = baseMaterial != null ? baseMaterial.getShininess() : 32.0;
+        Color specColor = baseMaterial != null ? baseMaterial.getSpecularColor() : Color.WHITE;
+        double roughness = baseMaterial != null ? baseMaterial.getRoughness() : 0.0;
+        double normalStrength = baseMaterial != null ? baseMaterial.getNormalStrength() : 1.0;
+        Texture2D albedoMap = baseMaterial != null ? baseMaterial.getAlbedoTexture() : null;
+        Texture2D normalMap = baseMaterial != null ? baseMaterial.getNormalTexture() : null;
+        Texture2D roughnessMap = baseMaterial != null ? baseMaterial.getRoughnessTexture() : null;
+        Texture2D bumpMap = baseMaterial != null ? baseMaterial.getBumpTexture() : null;
+        double bumpStrength = baseMaterial != null ? baseMaterial.getBumpStrength() : 1.0;
+
+        if (overrides.specularStrength != null) {
+            specular = overrides.specularStrength;
+        }
+        if (overrides.shininess != null) {
+            shininess = overrides.shininess;
+        }
+        if (overrides.specularColor != null) {
+            specColor = overrides.specularColor;
+        }
+        if (overrides.roughness != null) {
+            roughness = overrides.roughness;
+        }
+        if (overrides.normalStrength != null) {
+            normalStrength = overrides.normalStrength;
+        }
+        if (overrides.albedoMapSet) {
+            albedoMap = overrides.albedoMap;
+        }
+        if (overrides.normalMapSet) {
+            normalMap = overrides.normalMap;
+        }
+        if (overrides.roughnessMapSet) {
+            roughnessMap = overrides.roughnessMap;
+        }
+
+        return new Material(baseColor, specular, shininess, specColor, roughness, normalStrength, albedoMap, normalMap, roughnessMap, bumpMap, bumpStrength);
+    }
+
+    private static ResolvedMaterialOverrides resolveMaterialOverrides(MaterialOverrides overrides, File baseDir) throws IOException {
+        ResolvedMaterialOverrides resolved = new ResolvedMaterialOverrides();
+        resolved.specularStrength = overrides.specularStrength;
+        resolved.shininess = overrides.shininess;
+        resolved.specularColor = overrides.specularColor;
+        resolved.roughness = overrides.roughness;
+        resolved.normalStrength = overrides.normalStrength;
+
+        resolved.albedoMapSet = overrides.albedoMapSet;
+        resolved.normalMapSet = overrides.normalMapSet;
+        resolved.roughnessMapSet = overrides.roughnessMapSet;
+
+        if (overrides.albedoMapSet) {
+            resolved.albedoMap = loadOptionalTexture(overrides.albedoMapPath, baseDir);
+        }
+        if (overrides.normalMapSet) {
+            resolved.normalMap = loadOptionalTexture(overrides.normalMapPath, baseDir);
+        }
+        if (overrides.roughnessMapSet) {
+            resolved.roughnessMap = loadOptionalTexture(overrides.roughnessMapPath, baseDir);
+        }
+        return resolved;
+    }
+
+    private static Texture2D loadOptionalTexture(String path, File baseDir) throws IOException {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+        File textureFile = resolvePath(path, baseDir);
+        return Texture2D.load(textureFile.getPath());
+    }
+
+    private static Material resolveMaterial(String name, Map<String, Material> materialsByName, int lineNumber) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        Material material = materialsByName.get(name.toLowerCase(Locale.ROOT));
+        if (material == null) {
+            throw parseError(lineNumber, "Unknown material name: " + name);
+        }
+        return material;
     }
 
     private static Point3D parsePoint(String[] tokens, int startIndex, int lineNumber) {
@@ -367,6 +585,88 @@ public final class SceneFileLoader {
 
     private static IllegalArgumentException parseError(int lineNumber, String message) {
         return new IllegalArgumentException("Scene parse error at line " + lineNumber + ": " + message);
+    }
+
+    private static boolean isInheritToken(String token) {
+        return token != null && token.toLowerCase(Locale.ROOT).startsWith("inherit=");
+    }
+
+    private static String parseInheritName(String token, int lineNumber, String label) {
+        String[] kv = token.split("=", 2);
+        if (kv.length != 2 || kv[1].trim().isEmpty()) {
+            throw parseError(lineNumber, label + " must provide a base material name.");
+        }
+        return kv[1].trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String[] tokenize(String line) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            if (ch == '"') {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (Character.isWhitespace(ch) && !inQuotes) {
+                if (current.length() > 0) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+                continue;
+            }
+            current.append(ch);
+        }
+
+        if (inQuotes) {
+            throw new IllegalArgumentException("Unterminated quote in scene line: " + line);
+        }
+
+        if (current.length() > 0) {
+            tokens.add(current.toString());
+        }
+        return tokens.toArray(new String[0]);
+    }
+
+    private static final class MaterialOverrides {
+        private Double specularStrength;
+        private Double shininess;
+        private Color specularColor;
+        private Double roughness;
+        private Double normalStrength;
+        private String albedoMapPath;
+        private String normalMapPath;
+        private String roughnessMapPath;
+        private boolean albedoMapSet;
+        private boolean normalMapSet;
+        private boolean roughnessMapSet;
+
+        private boolean hasAnyOverride() {
+            return specularStrength != null
+                || shininess != null
+                || specularColor != null
+                || roughness != null
+                || normalStrength != null
+                || albedoMapSet
+                || normalMapSet
+                || roughnessMapSet;
+        }
+    }
+
+    private static final class ResolvedMaterialOverrides {
+        private Double specularStrength;
+        private Double shininess;
+        private Color specularColor;
+        private Double roughness;
+        private Double normalStrength;
+        private Texture2D albedoMap;
+        private Texture2D normalMap;
+        private Texture2D roughnessMap;
+        private boolean albedoMapSet;
+        private boolean normalMapSet;
+        private boolean roughnessMapSet;
     }
 }
 

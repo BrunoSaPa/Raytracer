@@ -5,8 +5,10 @@ import raytracer.accel.BinnedSahBvh;
 import raytracer.accel.BoundsOps;
 import raytracer.core.Intersection;
 import raytracer.core.Ray;
+import raytracer.material.Material;
 import raytracer.utils.Color;
 import raytracer.utils.Point3D;
+import raytracer.utils.UV;
 import raytracer.utils.Vector3D;
 
 import java.util.ArrayList;
@@ -21,12 +23,13 @@ public class MeshObject3D implements Object3D {
     private final Color color;
     private final TriangleCullingMode cullingMode;
     private final Map<Integer, IdentityHashMap<Point3D, Vector3D>> smoothedVertexNormalsByGroup;
-    private boolean smoothingNormalsDirty;
+    private volatile boolean smoothingNormalsDirty;
     private double specularStrength;
     private double shininess;
     private Color specularColor;
-    private BinnedSahBvh triangleBvh;
-    private boolean bvhDirty;
+    private Material material;
+    private volatile BinnedSahBvh triangleBvh;
+    private volatile boolean bvhDirty;
 
     public MeshObject3D(Color color, TriangleCullingMode cullingMode) {
         this(color, cullingMode, 0.0, 32.0, Color.WHITE);
@@ -51,6 +54,7 @@ public class MeshObject3D implements Object3D {
         this.specularStrength = Math.max(0.0, specularStrength);
         this.shininess = Math.max(1.0, shininess);
         this.specularColor = specularColor == null ? Color.WHITE : specularColor;
+        this.material = Material.fromLegacy(this.color, this.specularStrength, this.shininess, this.specularColor);
         this.bvhDirty = true;
     }
 
@@ -72,7 +76,22 @@ public class MeshObject3D implements Object3D {
         Vector3D normal1,
         Vector3D normal2
     ) {
-        triangles.add(new Triangle(v0, v1, v2, color, cullingMode, smoothingGroupId, normal0, normal1, normal2));
+        addTriangle(v0, v1, v2, smoothingGroupId, normal0, normal1, normal2, null, null, null);
+    }
+
+    public void addTriangle(
+        Point3D v0,
+        Point3D v1,
+        Point3D v2,
+        int smoothingGroupId,
+        Vector3D normal0,
+        Vector3D normal1,
+        Vector3D normal2,
+        UV uv0,
+        UV uv1,
+        UV uv2
+    ) {
+        triangles.add(new Triangle(v0, v1, v2, color, cullingMode, smoothingGroupId, normal0, normal1, normal2, uv0, uv1, uv2));
         smoothingNormalsDirty = true;
         bvhDirty = true;
     }
@@ -179,34 +198,71 @@ public class MeshObject3D implements Object3D {
 
     @Override
     public Color getColor() {
-        return color;
+        return material.getBaseColor();
     }
 
     @Override
     public double getSpecularStrength() {
-        return specularStrength;
+        return material.getSpecularStrength();
     }
 
     @Override
     public double getShininess() {
-        return shininess;
+        return material.getShininess();
     }
 
     @Override
     public Color getSpecularColor() {
-        return specularColor;
+        return material.getSpecularColor();
+    }
+
+    @Override
+    public Material getMaterial() {
+        return material;
     }
 
     public void setSpecularStrength(double specularStrength) {
         this.specularStrength = Math.max(0.0, specularStrength);
+        refreshMaterial();
     }
 
     public void setShininess(double shininess) {
         this.shininess = Math.max(1.0, shininess);
+        refreshMaterial();
     }
 
     public void setSpecularColor(Color specularColor) {
         this.specularColor = specularColor == null ? Color.WHITE : specularColor;
+        refreshMaterial();
+    }
+
+    public void setMaterial(Material material) {
+        if (material == null) {
+            return;
+        }
+        this.material = material;
+        this.specularStrength = material.getSpecularStrength();
+        this.shininess = material.getShininess();
+        this.specularColor = material.getSpecularColor();
+    }
+
+    private void refreshMaterial() {
+        Color baseColor = material != null ? material.getBaseColor() : this.color;
+        double roughness = material != null ? material.getRoughness() : 0.0;
+        double normalStrength = material != null ? material.getNormalStrength() : 1.0;
+        this.material = new Material(
+            baseColor,
+            this.specularStrength,
+            this.shininess,
+            this.specularColor,
+            roughness,
+            normalStrength,
+            material != null ? material.getAlbedoTexture() : null,
+            material != null ? material.getNormalTexture() : null,
+            material != null ? material.getRoughnessTexture() : null,
+            material != null ? material.getBumpTexture() : null,
+            material != null ? material.getBumpStrength() : 1.0
+        );
     }
 
     @Override
@@ -230,11 +286,15 @@ public class MeshObject3D implements Object3D {
             shadingNormal,
             closest.getBaryU(),
             closest.getBaryV(),
-            closest.getBaryW()
+            closest.getBaryW(),
+            closest.getTexU(),
+            closest.getTexV(),
+            closest.getTangent(),
+            closest.getBitangent()
         );
     }
 
-    private void rebuildBvhIfNeeded() {
+    private synchronized void rebuildBvhIfNeeded() {
         if (!bvhDirty) {
             return;
         }
@@ -287,7 +347,7 @@ public class MeshObject3D implements Object3D {
         return normal != null ? normal : fallback;
     }
 
-    private void rebuildSmoothedNormalsIfNeeded() {
+    private synchronized void rebuildSmoothedNormalsIfNeeded() {
         if (!smoothingNormalsDirty) {
             return;
         }
@@ -299,7 +359,7 @@ public class MeshObject3D implements Object3D {
                 continue;
             }
 
-            Vector3D faceNormal = triangle.getNormal();
+            Vector3D faceNormal = getAreaWeightedFaceNormal(triangle);
             accumulateSmoothedNormal(triangle.getV0(), triangle.getSmoothingGroupId(), faceNormal);
             accumulateSmoothedNormal(triangle.getV1(), triangle.getSmoothingGroupId(), faceNormal);
             accumulateSmoothedNormal(triangle.getV2(), triangle.getSmoothingGroupId(), faceNormal);
@@ -333,6 +393,13 @@ public class MeshObject3D implements Object3D {
             //vertex shared, so adding the face of the normal to existing ones
             groupNormals.put(vertex, current.add(faceNormal));
         }
+    }
+
+    //get weighted face normal to prevent weird shading because i was not taking into account triangle size
+    private Vector3D getAreaWeightedFaceNormal(Triangle triangle) {
+        Vector3D edge1 = triangle.getV1().subtract(triangle.getV0());
+        Vector3D edge2 = triangle.getV2().subtract(triangle.getV0());
+        return edge1.cross(edge2);
     }
 
     @Override

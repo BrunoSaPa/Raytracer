@@ -5,6 +5,7 @@ import raytracer.core.Ray;
 import raytracer.core.Scene;
 import raytracer.lighting.Light;
 import raytracer.lighting.LightSample;
+import raytracer.material.Material;
 
 import raytracer.utils.Color;
 import raytracer.utils.Point3D;
@@ -130,23 +131,23 @@ public class Raytracer {
             return backgroundColor;
         }
 
+        Material material = closest.getObject().getMaterial();
+        Color objectColor = material.sampleAlbedo(closest);
+
         //if no lights are set, i just use flat color per obj
         if (scene.getLights().isEmpty()) {
-            return closest.getObject().getColor();
+            return objectColor;
         }
 
-        //normal should already be normalized
-        Vector3D normal = closest.getNormal();
-        if (normal == null) {
-            return closest.getObject().getColor();
+        Vector3D geometricNormal = closest.getNormal();
+        if (geometricNormal == null) {
+            return objectColor;
         }
 
-
-        Color objectColor = closest.getObject().getColor();
-        //get values for specular
-        Color objectSpecularColor = closest.getObject().getSpecularColor();
-        double objectSpecularStrength = closest.getObject().getSpecularStrength();
-        double objectShininess = closest.getObject().getShininess();
+        Vector3D normal = material.sampleNormal(closest, geometricNormal);
+        Color objectSpecularColor = material.getSpecularColor();
+        double objectSpecularStrength = material.getSpecularStrength();
+        double objectShininess = material.sampleShininess(closest);
         boolean hasSpecular = objectSpecularStrength > 0.0;
         //get vector from point to where ray was originated which is V in the blinn-phong model, if no specular component is needed, we can skip this calculation
         Vector3D viewDirection = hasSpecular ? ray.getDirection().multiply(-1.0).normalize() : null;
@@ -166,7 +167,7 @@ public class Raytracer {
             }
 
             //check if the point is in shadow
-            if (isInShadow(closest.getPoint(), sample, sample.getMaxDistance())) {
+            if (isInShadow(closest.getPoint(), geometricNormal, sample, sample.getMaxDistance())) {
                 continue;
             }
 
@@ -194,9 +195,13 @@ public class Raytracer {
         return scene.intersect(ray, minDistance, maxDistance);
     }
 
-    private boolean isInShadow(Point3D point, LightSample lightSample, double maxDistance) {
-        //offset the origin slightly along the light direction to reduce self shadow
-        Point3D origin = point.add(lightSample.getDirectionToLight().multiply(SHADOW_EPSILON));
+    private boolean isInShadow(Point3D point, Vector3D geometricNormal, LightSample lightSample, double maxDistance) {
+        // Offset along surface normal to reduce self shadow
+        Vector3D n = geometricNormal == null ? lightSample.getDirectionToLight() : geometricNormal.normalize();
+        if (n.dot(lightSample.getDirectionToLight()) < 0.0) {
+            n = n.multiply(-1.0);
+        }
+        Point3D origin = point.add(n.multiply(SHADOW_EPSILON));
         Ray shadowRay = new Ray(origin, lightSample.getDirectionToLight());
         return scene.intersect(shadowRay, SHADOW_EPSILON, maxDistance) != null;
     }

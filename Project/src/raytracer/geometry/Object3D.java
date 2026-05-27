@@ -3,6 +3,7 @@ package raytracer.geometry;
 import raytracer.accel.AABB;
 import raytracer.core.Intersection;
 import raytracer.core.Ray;
+import raytracer.material.Material;
 import raytracer.utils.Color;
 
 public interface Object3D {
@@ -24,5 +25,9 @@ public interface Object3D {
 
     default Color getSpecularColor() {
         return Color.WHITE;
+    }
+
+    default Material getMaterial() {
+        return Material.fromLegacy(getColor(), getSpecularStrength(), getShininess(), getSpecularColor());
     }
 }

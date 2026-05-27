@@ -1,0 +1,32 @@
+# Skull scene (uses OBJ + MTL from mesh/skull)
+
+# Camera
+camera position 0 0.35 1.6
+camera lookAt 0 0.15 -4.0
+camera up 0 1 0
+camera fov 60
+camera near 0.01
+camera far 1000
+
+# Render
+render width 2160
+render height 2160
+render background 0.02 0.02 0.03
+render output output/skull.png
+
+# Lights
+light directional 0 0 -1 1 1 1 0.5
+light point 1 1 0 1 1 1 10
+light point -1 -1 0 1 1 1 10
+light spot 0 0 5 0 0 -1 20 1 1 1 30
+
+# Floor material + mesh
+material floorDark 0.16 0.16 0.18 roughness=0.55 spec=0.08 shininess=24
+mesh mesh/testmesh.obj 1 1 1 back material=floorDark scale=20 translate=0,-1.5,-4.0
+
+
+material skullTex 1 1 1 albedomap=mesh/skull/Skull.jpg spec=0.2 shininess=24 speccolor=1,1,1
+
+# Skull mesh
+mesh mesh/skull/skull.obj 1 1 1 none material=skullTex fit=2.9 rotate=270,0,0 translate=0,8.35,-13.75
+
