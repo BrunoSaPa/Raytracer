@@ -11,11 +11,14 @@ camera far 1000
 # Render
 render width 2160
 render height 2160
-render background 0.02 0.02 0.03
+render background 0 0 0
 render output output/head.png
+render shadowSamples 32
+render pointLightRadius 2.5
+render directionalAngle 0.4
 
 # Lights
-light directional 0 0 -1 1 1 1 0.4
+light directional 0 0 -1 1 1 1 0.01
 light point 0 5 1 1 1 1 20
 
 

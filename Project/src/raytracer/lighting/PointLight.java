@@ -44,5 +44,36 @@ public class PointLight implements Light {
 
         return new LightSample(toLight, distance, color, intensity, attenuation, 1.0);
     }
+
+    @Override
+    public int getSoftSampleCount(SoftShadowSettings settings) {
+        if (settings.getSoftShadowSamples() <= 1 || settings.getPointLightRadius() <= 0.0) {
+            return 1;
+        }
+        return settings.getSoftShadowSamples();
+    }
+
+    @Override
+    public LightSample sampleSoftAt(Point3D shadedPoint, int sampleIndex, int sampleCount, SoftShadowSettings settings) {
+        if (sampleCount <= 1 || settings.getPointLightRadius() <= 0.0) {
+            return sampleAt(shadedPoint);
+        }
+
+        Vector3D randomUnit = SoftShadowSettings.sampleUnitSphere(
+            sampleIndex,
+            sampleCount,
+            SoftShadowSettings.POINT_LIGHT_SCRAMBLE_SALT
+        );
+        Point3D sampledPosition = position.add(randomUnit.multiply(settings.getPointLightRadius()));
+        Vector3D toLightVector = sampledPosition.subtract(shadedPoint);
+        double distance = toLightVector.length();
+        if (distance <= 1e-8) {
+            return new LightSample(new Vector3D(0, 0, 0), 0.0, color, intensity, 0.0, 1.0);
+        }
+
+        Vector3D toLight = toLightVector.multiply(1.0 / distance);
+        double attenuation = 1.0 / (distance * distance);
+        return new LightSample(toLight, distance, color, intensity, attenuation, 1.0);
+    }
 }
 

@@ -14,6 +14,7 @@ This project is a CPU raytracer in Java with OBJ mesh loading, smooth/flat shadi
   - Blinn-Phong specular (`specularStrength`, `shininess`, `specularColor`).
   - Ambient term.
   - Hard shadows.
+  - Soft shadows via stochastic area-light sampling.
 - Materials:
   - Per-object `Material` assignment.
   - Named materials in scene files.
@@ -81,7 +82,17 @@ render background r g b
 render output path
 render threads int
 render tile int
+render shadowSamples int
+render pointLightRadius double
+render spotLightRadius double
+render directionalAngle degrees
 ```
+
+- Soft shadow controls are optional; defaults keep hard shadows.
+- `shadowSamples > 1` enables Monte Carlo soft shadows for lights that have non zero emitter size:
+  - point lights use `pointLightRadius`
+  - spot lights use `spotLightRadius`
+  - directional lights use `directionalAngle` (sun angular radius approximation)
 
 ### Lights
 

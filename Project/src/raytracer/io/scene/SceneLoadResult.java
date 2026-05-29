@@ -13,6 +13,10 @@ public class SceneLoadResult {
     private final String outputPath;
     private final int threadCount;
     private final int tileSize;
+    private final int softShadowSamples;
+    private final double pointLightRadius;
+    private final double spotLightRadius;
+    private final double directionalLightAngleDegrees;
 
     public SceneLoadResult(
         Scene scene,
@@ -22,7 +26,11 @@ public class SceneLoadResult {
         Color backgroundColor,
         String outputPath,
         int threadCount,
-        int tileSize
+        int tileSize,
+        int softShadowSamples,
+        double pointLightRadius,
+        double spotLightRadius,
+        double directionalLightAngleDegrees
     ) {
         this.scene = scene;
         this.camera = camera;
@@ -32,6 +40,10 @@ public class SceneLoadResult {
         this.outputPath = outputPath;
         this.threadCount = threadCount;
         this.tileSize = tileSize;
+        this.softShadowSamples = softShadowSamples;
+        this.pointLightRadius = pointLightRadius;
+        this.spotLightRadius = spotLightRadius;
+        this.directionalLightAngleDegrees = directionalLightAngleDegrees;
     }
 
     public Scene getScene() {
@@ -64,6 +76,22 @@ public class SceneLoadResult {
 
     public int getTileSize() {
         return tileSize;
+    }
+
+    public int getSoftShadowSamples() {
+        return softShadowSamples;
+    }
+
+    public double getPointLightRadius() {
+        return pointLightRadius;
+    }
+
+    public double getSpotLightRadius() {
+        return spotLightRadius;
+    }
+
+    public double getDirectionalLightAngleDegrees() {
+        return directionalLightAngleDegrees;
     }
 }
 

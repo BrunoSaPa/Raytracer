@@ -13,6 +13,9 @@ render width 2160
 render height 2160
 render background 0.02 0.02 0.03
 render output output/skull.png
+render shadowSamples 32
+render pointLightRadius 2.5
+render directionalAngle 0.4
 
 # Lights
 light directional 0 0 -1 1 1 1 0.5

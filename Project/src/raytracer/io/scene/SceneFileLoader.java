@@ -42,6 +42,10 @@ public final class SceneFileLoader {
         String outputPath = "output/render.png";
         int threadCount = Math.max(1, Runtime.getRuntime().availableProcessors());
         int tileSize = 32;
+        int softShadowSamples = 1;
+        double pointLightRadius = 0.0;
+        double spotLightRadius = 0.0;
+        double directionalLightAngleDegrees = 0.0;
 
         Point3D cameraPosition = new Point3D(0, 0, 0.5);
         Point3D cameraLookAt = new Point3D(0, 0, -1);
@@ -112,6 +116,18 @@ public final class SceneFileLoader {
                     } else if ("tile".equals(key)) {
                         requireTokenCount(tokens, 3, lineNumber, "render tile value");
                         tileSize = parseInt(tokens[2], lineNumber, "render tile");
+                    } else if ("shadowsamples".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render shadowSamples value");
+                        softShadowSamples = parseInt(tokens[2], lineNumber, "render shadowSamples");
+                    } else if ("pointlightradius".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render pointLightRadius value");
+                        pointLightRadius = parseDouble(tokens[2], lineNumber, "render pointLightRadius");
+                    } else if ("spotlightradius".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render spotLightRadius value");
+                        spotLightRadius = parseDouble(tokens[2], lineNumber, "render spotLightRadius");
+                    } else if ("directionalangle".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render directionalAngle degrees");
+                        directionalLightAngleDegrees = parseDouble(tokens[2], lineNumber, "render directionalAngle");
                     } else {
                         throw parseError(lineNumber, "Unknown render key: " + key);
                     }
@@ -151,10 +167,23 @@ public final class SceneFileLoader {
             }
         }
 
-        validate(width, height, near, far, threadCount, tileSize);
+        validate(width, height, near, far, threadCount, tileSize, softShadowSamples, pointLightRadius, spotLightRadius, directionalLightAngleDegrees);
 
         Camera camera = new Camera(cameraPosition, cameraLookAt, worldUp, fov, near, far, width, height);
-        return new SceneLoadResult(scene, camera, width, height, background, outputPath, threadCount, tileSize);
+        return new SceneLoadResult(
+            scene,
+            camera,
+            width,
+            height,
+            background,
+            outputPath,
+            threadCount,
+            tileSize,
+            softShadowSamples,
+            pointLightRadius,
+            spotLightRadius,
+            directionalLightAngleDegrees
+        );
     }
 
     private static void parseMeshLine(
@@ -257,6 +286,7 @@ public final class SceneFileLoader {
         }
 
         for (MeshObject3D mesh : meshes) {
+            System.out.println("Adding mesh with: " + mesh.getTriangleCount() + " triangles.");
             scene.addObject(mesh);
         }
     }
@@ -552,7 +582,18 @@ public final class SceneFileLoader {
         }
     }
 
-    private static void validate(int width, int height, double near, double far, int threadCount, int tileSize) {
+    private static void validate(
+        int width,
+        int height,
+        double near,
+        double far,
+        int threadCount,
+        int tileSize,
+        int softShadowSamples,
+        double pointLightRadius,
+        double spotLightRadius,
+        double directionalLightAngleDegrees
+    ) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Render width and height must be > 0.");
         }
@@ -564,6 +605,18 @@ public final class SceneFileLoader {
         }
         if (tileSize <= 0) {
             throw new IllegalArgumentException("Render tile size must be > 0.");
+        }
+        if (softShadowSamples <= 0) {
+            throw new IllegalArgumentException("Render shadowSamples must be > 0.");
+        }
+        if (pointLightRadius < 0.0) {
+            throw new IllegalArgumentException("Render pointLightRadius must be >= 0.");
+        }
+        if (spotLightRadius < 0.0) {
+            throw new IllegalArgumentException("Render spotLightRadius must be >= 0.");
+        }
+        if (directionalLightAngleDegrees < 0.0 || directionalLightAngleDegrees >= 90.0) {
+            throw new IllegalArgumentException("Render directionalAngle must be in [0, 90). ");
         }
     }
 

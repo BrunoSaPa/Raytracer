@@ -23,7 +23,11 @@ public class Main {
                 loaded.getHeight(),
                 loaded.getBackgroundColor(),
                 loaded.getThreadCount(),
-                loaded.getTileSize()
+                loaded.getTileSize(),
+                loaded.getSoftShadowSamples(),
+                loaded.getPointLightRadius(),
+                loaded.getSpotLightRadius(),
+                loaded.getDirectionalLightAngleDegrees()
             );
             raytracer.render(loaded.getOutputPath());
         } catch (Exception e) {

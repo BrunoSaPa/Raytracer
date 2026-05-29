@@ -11,6 +11,11 @@ render width 1080
 render height 1080
 render background 0 0 0
 render output output/render.png
+#soft shadows things
+render shadowSamples 16
+render pointLightRadius 0.25
+render spotLightRadius 0.15
+render directionalAngle 0.4
 
 # Lights
 light directional 0 0 -1 1 1 1 0.1

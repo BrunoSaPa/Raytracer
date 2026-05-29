@@ -5,6 +5,7 @@ import raytracer.core.Ray;
 import raytracer.core.Scene;
 import raytracer.lighting.Light;
 import raytracer.lighting.LightSample;
+import raytracer.lighting.SoftShadowSettings;
 import raytracer.material.Material;
 
 import raytracer.utils.Color;
@@ -31,14 +32,43 @@ public class Raytracer {
     private Color backgroundColor;
     private final int threadCount;
     private final int tileSize;
+    private final SoftShadowSettings softShadowSettings;
     static final double SHADOW_EPSILON = 1e-4;
     static final float ambient =  0.05f;
 
     public Raytracer(Scene scene, Camera camera, int width, int height, Color backgroundColor) {
-        this(scene, camera, width, height, backgroundColor, Math.max(1, Runtime.getRuntime().availableProcessors()), 32);
+        this(
+            scene,
+            camera,
+            width,
+            height,
+            backgroundColor,
+            Math.max(1, Runtime.getRuntime().availableProcessors()),
+            32,
+            1,
+            0.0,
+            0.0,
+            0.0
+        );
     }
 
     public Raytracer(Scene scene, Camera camera, int width, int height, Color backgroundColor, int threadCount, int tileSize) {
+        this(scene, camera, width, height, backgroundColor, threadCount, tileSize, 1, 0.0, 0.0, 0.0);
+    }
+
+    public Raytracer(
+        Scene scene,
+        Camera camera,
+        int width,
+        int height,
+        Color backgroundColor,
+        int threadCount,
+        int tileSize,
+        int softShadowSamples,
+        double pointLightRadius,
+        double spotLightRadius,
+        double directionalLightAngleDegrees
+    ) {
         this.scene = scene;
         this.camera = camera;
         this.width = width;
@@ -46,11 +76,24 @@ public class Raytracer {
         this.backgroundColor = backgroundColor;
         this.threadCount = Math.max(1, threadCount);
         this.tileSize = Math.max(8, tileSize);
+        this.softShadowSettings = new SoftShadowSettings(
+            softShadowSamples,
+            pointLightRadius,
+            spotLightRadius,
+            directionalLightAngleDegrees
+        );
     }
 
     public void render(String outputPath) {
         long renderStartNs = System.nanoTime();
         System.out.println("Rendering with " + threadCount + " threads (tile size: " + tileSize + ")");
+        System.out.println(
+            "Shadow mode: " + (softShadowSettings.getSoftShadowSamples() > 1 ? "soft" : "hard")
+                + " (samples=" + softShadowSettings.getSoftShadowSamples()
+                + ", pointRadius=" + softShadowSettings.getPointLightRadius()
+                + ", spotRadius=" + softShadowSettings.getSpotLightRadius()
+                + ", directionalAngle=" + softShadowSettings.getDirectionalLightAngleDegrees() + " deg)"
+        );
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         int[] frameBuffer = new int[width * height];
@@ -154,38 +197,49 @@ public class Raytracer {
         Color litColor = objectColor.multiply(ambient); //ambient term
 
         for (Light light : scene.getLights()) {
-            LightSample sample = light.sampleAt(closest.getPoint());
-            //light too far away, no contribution or too close to surface no contribution
-            if (sample.getMaxDistance() <= 0.0) {
-                continue;
+            int sampleCount = light.getSoftSampleCount(softShadowSettings);
+            Color lightAccumulation = Color.BLACK;
+
+            for (int sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++) {
+                LightSample sample = light.sampleSoftAt(closest.getPoint(), sampleIndex, sampleCount, softShadowSettings);
+
+                //light too far away, no contribution or too close to surface no contribution
+                if (sample.getMaxDistance() <= 0.0) {
+                    continue;
+                }
+
+                double nDotL = normal.dot(sample.getDirectionToLight());
+                //light behind normal, no contribution
+                if (nDotL <= 0.0) {
+                    continue;
+                }
+
+                //check if the point is in shadow for this sampled emitter point/direction
+                if (isInShadow(closest.getPoint(), geometricNormal, sample, sample.getMaxDistance())) {
+                    continue;
+                }
+
+                double diffuseScale = sample.getRadianceScale() * nDotL;
+                Color contribution = sample.getColor().multiply(objectColor).multiply(diffuseScale);
+
+                if (!hasSpecular) {
+                    lightAccumulation = lightAccumulation.add(contribution);
+                    continue;
+                }
+
+                Vector3D halfVector = sample.getDirectionToLight().add(viewDirection).normalize();
+                double nDotH = Math.max(0.0, normal.dot(halfVector));
+                //calculate contribution for specular
+                double specularScale = sample.getRadianceScale() * objectSpecularStrength * Math.pow(nDotH, objectShininess);
+                Color specularContribution = sample.getColor().multiply(objectSpecularColor).multiply(specularScale);
+
+                lightAccumulation = lightAccumulation.add(contribution).add(specularContribution);
             }
 
-            double nDotL = normal.dot(sample.getDirectionToLight());
-            //light behind normal, no contribution
-            if (nDotL <= 0.0) {
-                continue;
+            if (sampleCount > 1) {
+                lightAccumulation = lightAccumulation.multiply(1.0 / sampleCount);
             }
-
-            //check if the point is in shadow
-            if (isInShadow(closest.getPoint(), geometricNormal, sample, sample.getMaxDistance())) {
-                continue;
-            }
-
-            double diffuseScale = sample.getRadianceScale() * nDotL;
-            Color contribution = sample.getColor().multiply(objectColor).multiply(diffuseScale);
-
-            if (!hasSpecular) {
-                litColor = litColor.add(contribution);
-                continue;
-            }
-
-            Vector3D halfVector = sample.getDirectionToLight().add(viewDirection).normalize();
-            double nDotH = Math.max(0.0, normal.dot(halfVector));
-            //calculate contribution for specular
-            double specularScale = sample.getRadianceScale() * objectSpecularStrength * Math.pow(nDotH, objectShininess);
-            Color specularContribution = sample.getColor().multiply(objectSpecularColor).multiply(specularScale);
-
-            litColor = litColor.add(contribution).add(specularContribution);
+            litColor = litColor.add(lightAccumulation);
         }
 
         return litColor;
