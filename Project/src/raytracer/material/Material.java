@@ -18,13 +18,17 @@ public class Material {
     private final Texture2D roughnessTexture;
     private final Texture2D bumpTexture;
     private final double bumpStrength;
+    private final double reflectivity;
+    private final double transmission;
+    private final double ior;
+    private final double metalness;
 
     public Material(Color baseColor, double specularStrength, double shininess, Color specularColor) {
-        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0);
+        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0);
     }
 
     public Material(Color baseColor, double specularStrength, double shininess, Color specularColor, Texture2D albedoTexture) {
-        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, albedoTexture, null, null, null, 1.0);
+        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, albedoTexture, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0);
     }
 
     public Material(
@@ -38,7 +42,7 @@ public class Material {
         Texture2D normalTexture,
         Texture2D roughnessTexture
     ) {
-        this(baseColor, specularStrength, shininess, specularColor, roughness, normalStrength, albedoTexture, normalTexture, roughnessTexture, null, 1.0);
+        this(baseColor, specularStrength, shininess, specularColor, roughness, normalStrength, albedoTexture, normalTexture, roughnessTexture, null, 1.0, 0.0, 0.0, 1.5, 0.0);
     }
 
     public Material(
@@ -54,6 +58,42 @@ public class Material {
         Texture2D bumpTexture,
         double bumpStrength
     ) {
+        this(
+            baseColor,
+            specularStrength,
+            shininess,
+            specularColor,
+            roughness,
+            normalStrength,
+            albedoTexture,
+            normalTexture,
+            roughnessTexture,
+            bumpTexture,
+            bumpStrength,
+            0.0,
+            0.0,
+            1.5,
+            0.0
+        );
+    }
+
+    public Material(
+        Color baseColor,
+        double specularStrength,
+        double shininess,
+        Color specularColor,
+        double roughness,
+        double normalStrength,
+        Texture2D albedoTexture,
+        Texture2D normalTexture,
+        Texture2D roughnessTexture,
+        Texture2D bumpTexture,
+        double bumpStrength,
+        double reflectivity,
+        double transmission,
+        double ior,
+        double metalness
+    ) {
         this.baseColor = baseColor == null ? Color.WHITE : baseColor;
         this.specularStrength = Math.max(0.0, specularStrength);
         this.shininess = Math.max(1.0, shininess);
@@ -65,10 +105,14 @@ public class Material {
         this.roughnessTexture = roughnessTexture;
         this.bumpTexture = bumpTexture;
         this.bumpStrength = Math.max(0.0, bumpStrength);
+        this.reflectivity = clamp01(reflectivity);
+        this.transmission = clamp01(transmission);
+        this.ior = Math.max(1.0, ior);
+        this.metalness = clamp01(metalness);
     }
 
     public static Material fromLegacy(Color color, double specularStrength, double shininess, Color specularColor) {
-        return new Material(color, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0);
+        return new Material(color, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0);
     }
 
     public Color getBaseColor() {
@@ -117,6 +161,22 @@ public class Material {
 
     public double getBumpStrength() {
         return bumpStrength;
+    }
+
+    public double getReflectivity() {
+        return reflectivity;
+    }
+
+    public double getTransmission() {
+        return transmission;
+    }
+
+    public double getIor() {
+        return ior;
+    }
+
+    public double getMetalness() {
+        return metalness;
     }
 
     public Color sampleAlbedo(Intersection hit) {

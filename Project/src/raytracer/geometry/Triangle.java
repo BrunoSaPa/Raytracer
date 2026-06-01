@@ -167,6 +167,10 @@ public class Triangle implements Object3D {
         Color baseColor = material != null ? material.getBaseColor() : this.color;
         double roughness = material != null ? material.getRoughness() : 0.0;
         double normalStrength = material != null ? material.getNormalStrength() : 1.0;
+        double reflectivity = material != null ? material.getReflectivity() : 0.0;
+        double transmission = material != null ? material.getTransmission() : 0.0;
+        double ior = material != null ? material.getIor() : 1.5;
+        double metalness = material != null ? material.getMetalness() : 0.0;
         this.material = new Material(
             baseColor,
             this.specularStrength,
@@ -178,7 +182,11 @@ public class Triangle implements Object3D {
             material != null ? material.getNormalTexture() : null,
             material != null ? material.getRoughnessTexture() : null,
             material != null ? material.getBumpTexture() : null,
-            material != null ? material.getBumpStrength() : 1.0
+            material != null ? material.getBumpStrength() : 1.0,
+            reflectivity,
+            transmission,
+            ior,
+            metalness
         );
     }
 

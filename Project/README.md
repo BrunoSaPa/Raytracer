@@ -15,6 +15,7 @@ This project is a CPU raytracer in Java with OBJ mesh loading, smooth/flat shadi
   - Ambient term.
   - Hard shadows.
   - Soft shadows via stochastic area-light sampling.
+  - Recursive reflection/refraction with Fresnel (fixed max depth).
 - Materials:
   - Per-object `Material` assignment.
   - Named materials in scene files.
@@ -86,6 +87,7 @@ render shadowSamples int
 render pointLightRadius double
 render spotLightRadius double
 render directionalAngle degrees
+render maxDepth int
 ```
 
 - Soft shadow controls are optional; defaults keep hard shadows.
@@ -166,6 +168,14 @@ material name inherit=baseName [options]
   - `normalmap=relative/or/absolute/path.png`
   - `normalstrength=double` (>= 0, default 1)
   - `roughnessmap=relative/or/absolute/path.png`
+  - `reflectivity=double` (0..1)
+  - `transmission=double` (0..1)
+  - `ior=double` (>= 1, glass often ~1.5)
+  - `metalness=double` (0..1)
+
+Notes:
+- Transparent materials cast colored transmission shadows using per-hit transmittance along the shadow ray.
+- Metal workflow uses the same material model (`metalness` high, `transmission` near 0).
 
 ## OBJ + MTL notes
 

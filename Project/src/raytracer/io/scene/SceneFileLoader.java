@@ -46,6 +46,7 @@ public final class SceneFileLoader {
         double pointLightRadius = 0.0;
         double spotLightRadius = 0.0;
         double directionalLightAngleDegrees = 0.0;
+        int maxRayDepth = 4;
 
         Point3D cameraPosition = new Point3D(0, 0, 0.5);
         Point3D cameraLookAt = new Point3D(0, 0, -1);
@@ -128,6 +129,9 @@ public final class SceneFileLoader {
                     } else if ("directionalangle".equals(key)) {
                         requireTokenCount(tokens, 3, lineNumber, "render directionalAngle degrees");
                         directionalLightAngleDegrees = parseDouble(tokens[2], lineNumber, "render directionalAngle");
+                    } else if ("maxdepth".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render maxDepth value");
+                        maxRayDepth = parseInt(tokens[2], lineNumber, "render maxDepth");
                     } else {
                         throw parseError(lineNumber, "Unknown render key: " + key);
                     }
@@ -167,7 +171,19 @@ public final class SceneFileLoader {
             }
         }
 
-        validate(width, height, near, far, threadCount, tileSize, softShadowSamples, pointLightRadius, spotLightRadius, directionalLightAngleDegrees);
+        validate(
+            width,
+            height,
+            near,
+            far,
+            threadCount,
+            tileSize,
+            softShadowSamples,
+            pointLightRadius,
+            spotLightRadius,
+            directionalLightAngleDegrees,
+            maxRayDepth
+        );
 
         Camera camera = new Camera(cameraPosition, cameraLookAt, worldUp, fov, near, far, width, height);
         return new SceneLoadResult(
@@ -182,7 +198,8 @@ public final class SceneFileLoader {
             softShadowSamples,
             pointLightRadius,
             spotLightRadius,
-            directionalLightAngleDegrees
+            directionalLightAngleDegrees,
+            maxRayDepth
         );
     }
 
@@ -246,6 +263,14 @@ public final class SceneFileLoader {
             } else if ("roughnessmap".equals(option)) {
                 overrides.roughnessMapPath = value;
                 overrides.roughnessMapSet = true;
+            } else if ("reflectivity".equals(option)) {
+                overrides.reflectivity = parseDouble(value, lineNumber, "mesh reflectivity");
+            } else if ("transmission".equals(option)) {
+                overrides.transmission = parseDouble(value, lineNumber, "mesh transmission");
+            } else if ("ior".equals(option)) {
+                overrides.ior = parseDouble(value, lineNumber, "mesh ior");
+            } else if ("metalness".equals(option)) {
+                overrides.metalness = parseDouble(value, lineNumber, "mesh metalness");
             } else {
                 throw parseError(lineNumber, "Unknown mesh option: " + option);
             }
@@ -348,6 +373,14 @@ public final class SceneFileLoader {
             } else if ("roughnessmap".equals(option)) {
                 overrides.roughnessMapPath = value;
                 overrides.roughnessMapSet = true;
+            } else if ("reflectivity".equals(option)) {
+                overrides.reflectivity = parseDouble(value, lineNumber, "sphere reflectivity");
+            } else if ("transmission".equals(option)) {
+                overrides.transmission = parseDouble(value, lineNumber, "sphere transmission");
+            } else if ("ior".equals(option)) {
+                overrides.ior = parseDouble(value, lineNumber, "sphere ior");
+            } else if ("metalness".equals(option)) {
+                overrides.metalness = parseDouble(value, lineNumber, "sphere metalness");
             } else {
                 throw parseError(lineNumber, "Unknown sphere option: " + option);
             }
@@ -415,6 +448,14 @@ public final class SceneFileLoader {
             } else if ("roughnessmap".equals(option)) {
                 overrides.roughnessMapPath = value;
                 overrides.roughnessMapSet = true;
+            } else if ("reflectivity".equals(option)) {
+                overrides.reflectivity = parseDouble(value, lineNumber, "material reflectivity");
+            } else if ("transmission".equals(option)) {
+                overrides.transmission = parseDouble(value, lineNumber, "material transmission");
+            } else if ("ior".equals(option)) {
+                overrides.ior = parseDouble(value, lineNumber, "material ior");
+            } else if ("metalness".equals(option)) {
+                overrides.metalness = parseDouble(value, lineNumber, "material metalness");
             } else {
                 throw parseError(lineNumber, "Unknown material option: " + option);
             }
@@ -442,6 +483,10 @@ public final class SceneFileLoader {
         Texture2D roughnessMap = baseMaterial != null ? baseMaterial.getRoughnessTexture() : null;
         Texture2D bumpMap = baseMaterial != null ? baseMaterial.getBumpTexture() : null;
         double bumpStrength = baseMaterial != null ? baseMaterial.getBumpStrength() : 1.0;
+        double reflectivity = baseMaterial != null ? baseMaterial.getReflectivity() : 0.0;
+        double transmission = baseMaterial != null ? baseMaterial.getTransmission() : 0.0;
+        double ior = baseMaterial != null ? baseMaterial.getIor() : 1.5;
+        double metalness = baseMaterial != null ? baseMaterial.getMetalness() : 0.0;
 
         if (overrides.specularStrength != null) {
             specular = overrides.specularStrength;
@@ -467,8 +512,36 @@ public final class SceneFileLoader {
         if (overrides.roughnessMapSet) {
             roughnessMap = overrides.roughnessMap;
         }
+        if (overrides.reflectivity != null) {
+            reflectivity = overrides.reflectivity;
+        }
+        if (overrides.transmission != null) {
+            transmission = overrides.transmission;
+        }
+        if (overrides.ior != null) {
+            ior = overrides.ior;
+        }
+        if (overrides.metalness != null) {
+            metalness = overrides.metalness;
+        }
 
-        return new Material(baseColor, specular, shininess, specColor, roughness, normalStrength, albedoMap, normalMap, roughnessMap, bumpMap, bumpStrength);
+        return new Material(
+            baseColor,
+            specular,
+            shininess,
+            specColor,
+            roughness,
+            normalStrength,
+            albedoMap,
+            normalMap,
+            roughnessMap,
+            bumpMap,
+            bumpStrength,
+            reflectivity,
+            transmission,
+            ior,
+            metalness
+        );
     }
 
     private static ResolvedMaterialOverrides resolveMaterialOverrides(MaterialOverrides overrides, File baseDir) throws IOException {
@@ -478,6 +551,10 @@ public final class SceneFileLoader {
         resolved.specularColor = overrides.specularColor;
         resolved.roughness = overrides.roughness;
         resolved.normalStrength = overrides.normalStrength;
+        resolved.reflectivity = overrides.reflectivity;
+        resolved.transmission = overrides.transmission;
+        resolved.ior = overrides.ior;
+        resolved.metalness = overrides.metalness;
 
         resolved.albedoMapSet = overrides.albedoMapSet;
         resolved.normalMapSet = overrides.normalMapSet;
@@ -592,7 +669,8 @@ public final class SceneFileLoader {
         int softShadowSamples,
         double pointLightRadius,
         double spotLightRadius,
-        double directionalLightAngleDegrees
+        double directionalLightAngleDegrees,
+        int maxRayDepth
     ) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Render width and height must be > 0.");
@@ -617,6 +695,9 @@ public final class SceneFileLoader {
         }
         if (directionalLightAngleDegrees < 0.0 || directionalLightAngleDegrees >= 90.0) {
             throw new IllegalArgumentException("Render directionalAngle must be in [0, 90). ");
+        }
+        if (maxRayDepth < 0) {
+            throw new IllegalArgumentException("Render maxDepth must be >= 0.");
         }
     }
 
@@ -689,6 +770,10 @@ public final class SceneFileLoader {
         private Color specularColor;
         private Double roughness;
         private Double normalStrength;
+        private Double reflectivity;
+        private Double transmission;
+        private Double ior;
+        private Double metalness;
         private String albedoMapPath;
         private String normalMapPath;
         private String roughnessMapPath;
@@ -702,6 +787,10 @@ public final class SceneFileLoader {
                 || specularColor != null
                 || roughness != null
                 || normalStrength != null
+                || reflectivity != null
+                || transmission != null
+                || ior != null
+                || metalness != null
                 || albedoMapSet
                 || normalMapSet
                 || roughnessMapSet;
@@ -714,6 +803,10 @@ public final class SceneFileLoader {
         private Color specularColor;
         private Double roughness;
         private Double normalStrength;
+        private Double reflectivity;
+        private Double transmission;
+        private Double ior;
+        private Double metalness;
         private Texture2D albedoMap;
         private Texture2D normalMap;
         private Texture2D roughnessMap;

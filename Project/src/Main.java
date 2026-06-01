@@ -27,7 +27,8 @@ public class Main {
                 loaded.getSoftShadowSamples(),
                 loaded.getPointLightRadius(),
                 loaded.getSpotLightRadius(),
-                loaded.getDirectionalLightAngleDegrees()
+                loaded.getDirectionalLightAngleDegrees(),
+                loaded.getMaxRayDepth()
             );
             raytracer.render(loaded.getOutputPath());
         } catch (Exception e) {

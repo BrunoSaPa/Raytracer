@@ -1,0 +1,38 @@
+# Glass + metal demo scene
+
+# Camera
+camera position 0 0.5 1.4
+camera lookAt 0 0.2 -4.2
+camera up 0 1 0
+camera fov 60
+camera near 0.01
+camera far 1000
+
+# Render
+render width 2080
+render height 2080
+render background 0.02 0.02 0.03
+render output output/glass.png
+render threads 8
+render tile 32
+render shadowSamples 8
+render pointLightRadius 0.15
+render directionalAngle 0.25
+render maxDepth 5
+
+# Lights
+light directional 0 -1 -1 1 1 1 0.3
+light point 1.5 1.8 2.5 1 1 1 25
+light point -1.5 1.4 -3.5 1 0.95 0.9 18
+
+# Materials
+material floorMat 0.9 0.9 0.9 roughness=0.5 spec=0.08
+material glass 1 1 1 spec=1 shininess=128 transmission=0.96 ior=1.5 reflectivity=0.04 roughness=0.0
+material metal 0.92 0.86 0.75 spec=1 shininess=256 reflectivity=0.9 metalness=1 roughness=0.1
+
+# Geometry
+mesh mesh/testmesh.obj 1 1 1 back material=floorMat scale=24 translate=0,-1.2,-4
+sphere -0.8 -0.1 -4.1 0.9 1 1 1 material=glass
+sphere 1.0 -0.15 -4.6 0.85 1 1 1 material=metal
+mesh mesh/lphead/head.OBJ 1 1 1 none fit=1 rotate=0,335,0 translate=0,0,-2.2
+
