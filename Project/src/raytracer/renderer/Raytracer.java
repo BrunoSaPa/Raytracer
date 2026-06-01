@@ -34,6 +34,7 @@ public class Raytracer {
     private final int tileSize;
     private final SoftShadowSettings softShadowSettings;
     private final int maxRayDepth;
+    private final int dofSamples;
     static final double SHADOW_EPSILON = 1e-4;
     static final double SECONDARY_RAY_EPSILON = 1e-4;
     static final int SHADOW_TRANSMITTANCE_MAX_STEPS = 32;
@@ -53,12 +54,13 @@ public class Raytracer {
             0.0,
             0.0,
             0.0,
-            4
+            4,
+            1
         );
     }
 
     public Raytracer(Scene scene, Camera camera, int width, int height, Color backgroundColor, int threadCount, int tileSize) {
-        this(scene, camera, width, height, backgroundColor, threadCount, tileSize, 1, 0.0, 0.0, 0.0, 4);
+        this(scene, camera, width, height, backgroundColor, threadCount, tileSize, 1, 0.0, 0.0, 0.0, 4, 1);
     }
 
     public Raytracer(
@@ -73,7 +75,8 @@ public class Raytracer {
         double pointLightRadius,
         double spotLightRadius,
         double directionalLightAngleDegrees,
-        int maxRayDepth
+        int maxRayDepth,
+        int dofSamples
     ) {
         this.scene = scene;
         this.camera = camera;
@@ -89,6 +92,7 @@ public class Raytracer {
             directionalLightAngleDegrees
         );
         this.maxRayDepth = Math.max(0, maxRayDepth);
+        this.dofSamples = Math.max(1, dofSamples);
     }
 
     public void render(String outputPath) {
@@ -102,6 +106,7 @@ public class Raytracer {
                 + ", directionalAngle=" + softShadowSettings.getDirectionalLightAngleDegrees() + " deg)"
         );
         System.out.println("Recursion max depth: " + maxRayDepth);
+        System.out.println("Depth of field: " + (dofSamples > 1 ? "enabled" : "disabled") + " (samples=" + dofSamples + ")");
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         int[] frameBuffer = new int[width * height];
@@ -133,8 +138,7 @@ public class Raytracer {
                     for (int y = startY; y < endY; y++) {
                         int rowOffset = y * width;
                         for (int x = startX; x < endX; x++) {
-                            Ray ray = camera.generateRay(x, y);
-                            Color pixelColor = tracePrimaryRay(ray);
+                            Color pixelColor = tracePixel(x, y);
                             frameBuffer[rowOffset + x] = pixelColor.toRGB();
                         }
                     }
@@ -174,6 +178,20 @@ public class Raytracer {
         } catch (Exception e) {
             System.err.println("Error saving image: " + e.getMessage());
         }
+    }
+
+    private Color tracePixel(int pixelX, int pixelY) {
+        if (dofSamples <= 1) {
+            Ray ray = camera.generateRay(pixelX, pixelY);
+            return tracePrimaryRay(ray);
+        }
+
+        Color accumulated = Color.BLACK;
+        for (int sampleIndex = 0; sampleIndex < dofSamples; sampleIndex++) {
+            Ray ray = camera.generateRay(pixelX, pixelY, sampleIndex, dofSamples);
+            accumulated = accumulated.add(tracePrimaryRay(ray));
+        }
+        return accumulated.multiply(1.0 / dofSamples);
     }
 
     private Color tracePrimaryRay(Ray ray) {

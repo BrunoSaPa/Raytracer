@@ -28,7 +28,8 @@ public class Main {
                 loaded.getPointLightRadius(),
                 loaded.getSpotLightRadius(),
                 loaded.getDirectionalLightAngleDegrees(),
-                loaded.getMaxRayDepth()
+                loaded.getMaxRayDepth(),
+                loaded.getDofSamples()
             );
             raytracer.render(loaded.getOutputPath());
         } catch (Exception e) {

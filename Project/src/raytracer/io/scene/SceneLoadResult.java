@@ -18,6 +18,7 @@ public class SceneLoadResult {
     private final double spotLightRadius;
     private final double directionalLightAngleDegrees;
     private final int maxRayDepth;
+    private final int dofSamples;
 
     public SceneLoadResult(
         Scene scene,
@@ -32,7 +33,8 @@ public class SceneLoadResult {
         double pointLightRadius,
         double spotLightRadius,
         double directionalLightAngleDegrees,
-        int maxRayDepth
+        int maxRayDepth,
+        int dofSamples
     ) {
         this.scene = scene;
         this.camera = camera;
@@ -47,6 +49,7 @@ public class SceneLoadResult {
         this.spotLightRadius = spotLightRadius;
         this.directionalLightAngleDegrees = directionalLightAngleDegrees;
         this.maxRayDepth = maxRayDepth;
+        this.dofSamples = dofSamples;
     }
 
     public Scene getScene() {
@@ -99,6 +102,10 @@ public class SceneLoadResult {
 
     public int getMaxRayDepth() {
         return maxRayDepth;
+    }
+
+    public int getDofSamples() {
+        return dofSamples;
     }
 }
 

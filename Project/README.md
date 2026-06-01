@@ -16,6 +16,7 @@ This project is a CPU raytracer in Java with OBJ mesh loading, smooth/flat shadi
   - Hard shadows.
   - Soft shadows via stochastic area-light sampling.
   - Recursive reflection/refraction with Fresnel (fixed max depth).
+  - Thin lens depth of field (aperture + focus distance).
 - Materials:
   - Per-object `Material` assignment.
   - Named materials in scene files.
@@ -72,6 +73,8 @@ camera up x y z
 camera fov degrees
 camera near value
 camera far value
+camera aperture value
+camera focusDistance value
 ```
 
 ### Render settings
@@ -88,6 +91,7 @@ render pointLightRadius double
 render spotLightRadius double
 render directionalAngle degrees
 render maxDepth int
+render dofSamples int
 ```
 
 - Soft shadow controls are optional; defaults keep hard shadows.
@@ -95,6 +99,17 @@ render maxDepth int
   - point lights use `pointLightRadius`
   - spot lights use `spotLightRadius`
   - directional lights use `directionalAngle` (sun angular radius approximation)
+- DoF controls are optional, defaults keep pinhole rendering.
+- `camera aperture > 0` enables thin-lens behavior and `render dofSamples` controls per pixel lens samples.
+- `camera focusDistance` is the distance from the camera where objects remain sharp.
+
+Example DoF setup:
+
+```txt
+camera aperture 0.06
+camera focusDistance 5.0
+render dofSamples 12
+```
 
 ### Lights
 

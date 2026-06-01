@@ -47,6 +47,7 @@ public final class SceneFileLoader {
         double spotLightRadius = 0.0;
         double directionalLightAngleDegrees = 0.0;
         int maxRayDepth = 4;
+        int dofSamples = 1;
 
         Point3D cameraPosition = new Point3D(0, 0, 0.5);
         Point3D cameraLookAt = new Point3D(0, 0, -1);
@@ -54,6 +55,8 @@ public final class SceneFileLoader {
         double fov = 80.0;
         double near = 0.01;
         double far = 1000.0;
+        double apertureRadius = 0.0;
+        Double focusDistance = null;
         Map<String, Material> materialsByName = new HashMap<>();
 
         File baseDir = new File(filePath).getAbsoluteFile().getParentFile();
@@ -95,6 +98,12 @@ public final class SceneFileLoader {
                     } else if ("far".equals(key)) {
                         requireTokenCount(tokens, 3, lineNumber, "camera far value");
                         far = parseDouble(tokens[2], lineNumber, "camera far");
+                    } else if ("aperture".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "camera aperture value");
+                        apertureRadius = parseDouble(tokens[2], lineNumber, "camera aperture");
+                    } else if ("focusdistance".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "camera focusDistance value");
+                        focusDistance = parseDouble(tokens[2], lineNumber, "camera focusDistance");
                     } else {
                         throw parseError(lineNumber, "Unknown camera key: " + key);
                     }
@@ -132,6 +141,9 @@ public final class SceneFileLoader {
                     } else if ("maxdepth".equals(key)) {
                         requireTokenCount(tokens, 3, lineNumber, "render maxDepth value");
                         maxRayDepth = parseInt(tokens[2], lineNumber, "render maxDepth");
+                    } else if ("dofsamples".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render dofSamples value");
+                        dofSamples = parseInt(tokens[2], lineNumber, "render dofSamples");
                     } else {
                         throw parseError(lineNumber, "Unknown render key: " + key);
                     }
@@ -182,10 +194,27 @@ public final class SceneFileLoader {
             pointLightRadius,
             spotLightRadius,
             directionalLightAngleDegrees,
-            maxRayDepth
+            maxRayDepth,
+            dofSamples,
+            apertureRadius,
+            focusDistance
         );
 
-        Camera camera = new Camera(cameraPosition, cameraLookAt, worldUp, fov, near, far, width, height);
+        double resolvedFocusDistance = focusDistance != null
+            ? focusDistance
+            : cameraLookAt.subtract(cameraPosition).length();
+        Camera camera = new Camera(
+            cameraPosition,
+            cameraLookAt,
+            worldUp,
+            fov,
+            near,
+            far,
+            width,
+            height,
+            apertureRadius,
+            resolvedFocusDistance
+        );
         return new SceneLoadResult(
             scene,
             camera,
@@ -199,7 +228,8 @@ public final class SceneFileLoader {
             pointLightRadius,
             spotLightRadius,
             directionalLightAngleDegrees,
-            maxRayDepth
+            maxRayDepth,
+            dofSamples
         );
     }
 
@@ -694,7 +724,10 @@ public final class SceneFileLoader {
         double pointLightRadius,
         double spotLightRadius,
         double directionalLightAngleDegrees,
-        int maxRayDepth
+        int maxRayDepth,
+        int dofSamples,
+        double apertureRadius,
+        Double focusDistance
     ) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Render width and height must be > 0.");
@@ -722,6 +755,15 @@ public final class SceneFileLoader {
         }
         if (maxRayDepth < 0) {
             throw new IllegalArgumentException("Render maxDepth must be >= 0.");
+        }
+        if (dofSamples <= 0) {
+            throw new IllegalArgumentException("Render dofSamples must be > 0.");
+        }
+        if (apertureRadius < 0.0) {
+            throw new IllegalArgumentException("Camera aperture must be >= 0.");
+        }
+        if (focusDistance != null && focusDistance <= 0.0) {
+            throw new IllegalArgumentException("Camera focusDistance must be > 0 when provided.");
         }
     }
 
