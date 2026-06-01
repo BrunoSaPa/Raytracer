@@ -172,6 +172,8 @@ material name inherit=baseName [options]
   - `transmission=double` (0..1)
   - `ior=double` (>= 1, glass often ~1.5)
   - `metalness=double` (0..1)
+  - `absorption=double` (>= 0, Beer Lambert density)
+  - `absorbcolor=r,g,b` (Beer Lambert per channel transmittance color)
 
 Notes:
 - Transparent materials cast colored transmission shadows using per-hit transmittance along the shadow ray.

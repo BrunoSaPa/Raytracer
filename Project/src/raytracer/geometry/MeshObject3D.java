@@ -254,6 +254,8 @@ public class MeshObject3D implements Object3D {
         double transmission = material != null ? material.getTransmission() : 0.0;
         double ior = material != null ? material.getIor() : 1.5;
         double metalness = material != null ? material.getMetalness() : 0.0;
+        Color absorptionColor = material != null ? material.getAbsorptionColor() : Color.WHITE;
+        double absorptionStrength = material != null ? material.getAbsorptionStrength() : 0.0;
         this.material = new Material(
             baseColor,
             this.specularStrength,
@@ -269,7 +271,9 @@ public class MeshObject3D implements Object3D {
             reflectivity,
             transmission,
             ior,
-            metalness
+            metalness,
+            absorptionColor,
+            absorptionStrength
         );
     }
 

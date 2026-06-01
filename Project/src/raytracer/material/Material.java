@@ -22,13 +22,15 @@ public class Material {
     private final double transmission;
     private final double ior;
     private final double metalness;
+    private final Color absorptionColor;
+    private final double absorptionStrength;
 
     public Material(Color baseColor, double specularStrength, double shininess, Color specularColor) {
-        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0);
+        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0, Color.WHITE, 0.0);
     }
 
     public Material(Color baseColor, double specularStrength, double shininess, Color specularColor, Texture2D albedoTexture) {
-        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, albedoTexture, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0);
+        this(baseColor, specularStrength, shininess, specularColor, 0.0, 1.0, albedoTexture, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0, Color.WHITE, 0.0);
     }
 
     public Material(
@@ -42,7 +44,7 @@ public class Material {
         Texture2D normalTexture,
         Texture2D roughnessTexture
     ) {
-        this(baseColor, specularStrength, shininess, specularColor, roughness, normalStrength, albedoTexture, normalTexture, roughnessTexture, null, 1.0, 0.0, 0.0, 1.5, 0.0);
+        this(baseColor, specularStrength, shininess, specularColor, roughness, normalStrength, albedoTexture, normalTexture, roughnessTexture, null, 1.0, 0.0, 0.0, 1.5, 0.0, Color.WHITE, 0.0);
     }
 
     public Material(
@@ -73,6 +75,8 @@ public class Material {
             0.0,
             0.0,
             1.5,
+            0.0,
+            Color.WHITE,
             0.0
         );
     }
@@ -94,6 +98,46 @@ public class Material {
         double ior,
         double metalness
     ) {
+        this(
+            baseColor,
+            specularStrength,
+            shininess,
+            specularColor,
+            roughness,
+            normalStrength,
+            albedoTexture,
+            normalTexture,
+            roughnessTexture,
+            bumpTexture,
+            bumpStrength,
+            reflectivity,
+            transmission,
+            ior,
+            metalness,
+            Color.WHITE,
+            0.0
+        );
+    }
+
+    public Material(
+        Color baseColor,
+        double specularStrength,
+        double shininess,
+        Color specularColor,
+        double roughness,
+        double normalStrength,
+        Texture2D albedoTexture,
+        Texture2D normalTexture,
+        Texture2D roughnessTexture,
+        Texture2D bumpTexture,
+        double bumpStrength,
+        double reflectivity,
+        double transmission,
+        double ior,
+        double metalness,
+        Color absorptionColor,
+        double absorptionStrength
+    ) {
         this.baseColor = baseColor == null ? Color.WHITE : baseColor;
         this.specularStrength = Math.max(0.0, specularStrength);
         this.shininess = Math.max(1.0, shininess);
@@ -109,10 +153,12 @@ public class Material {
         this.transmission = clamp01(transmission);
         this.ior = Math.max(1.0, ior);
         this.metalness = clamp01(metalness);
+        this.absorptionColor = absorptionColor == null ? Color.WHITE : absorptionColor;
+        this.absorptionStrength = Math.max(0.0, absorptionStrength);
     }
 
     public static Material fromLegacy(Color color, double specularStrength, double shininess, Color specularColor) {
-        return new Material(color, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0);
+        return new Material(color, specularStrength, shininess, specularColor, 0.0, 1.0, null, null, null, null, 1.0, 0.0, 0.0, 1.5, 0.0, Color.WHITE, 0.0);
     }
 
     public Color getBaseColor() {
@@ -177,6 +223,23 @@ public class Material {
 
     public double getMetalness() {
         return metalness;
+    }
+
+    public Color getAbsorptionColor() {
+        return absorptionColor;
+    }
+
+    public double getAbsorptionStrength() {
+        return absorptionStrength;
+    }
+
+    public Color computeAbsorptionTransmittance(double distance) {
+        if (absorptionStrength <= 0.0 || distance <= 0.0) {
+            return Color.WHITE;
+        }
+
+        double opticalDepth = absorptionStrength * distance;
+        return new Color(channelBeerLambert(absorptionColor.getR(), opticalDepth), channelBeerLambert(absorptionColor.getG(), opticalDepth), channelBeerLambert(absorptionColor.getB(), opticalDepth));
     }
 
     public Color sampleAlbedo(Intersection hit) {
@@ -257,6 +320,11 @@ public class Material {
 
     private double clamp01(double value) {
         return Math.max(0.0, Math.min(1.0, value));
+    }
+
+    private double channelBeerLambert(double channel, double opticalDepth) {
+        double base = Math.max(1e-6, Math.min(1.0, channel));
+        return Math.pow(base, opticalDepth);
     }
 }
 

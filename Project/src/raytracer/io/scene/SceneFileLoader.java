@@ -271,6 +271,10 @@ public final class SceneFileLoader {
                 overrides.ior = parseDouble(value, lineNumber, "mesh ior");
             } else if ("metalness".equals(option)) {
                 overrides.metalness = parseDouble(value, lineNumber, "mesh metalness");
+            } else if ("absorption".equals(option)) {
+                overrides.absorptionStrength = parseDouble(value, lineNumber, "mesh absorption");
+            } else if ("absorbcolor".equals(option)) {
+                overrides.absorptionColor = parseCsvColor(value, lineNumber, "mesh absorbcolor");
             } else {
                 throw parseError(lineNumber, "Unknown mesh option: " + option);
             }
@@ -381,6 +385,10 @@ public final class SceneFileLoader {
                 overrides.ior = parseDouble(value, lineNumber, "sphere ior");
             } else if ("metalness".equals(option)) {
                 overrides.metalness = parseDouble(value, lineNumber, "sphere metalness");
+            } else if ("absorption".equals(option)) {
+                overrides.absorptionStrength = parseDouble(value, lineNumber, "sphere absorption");
+            } else if ("absorbcolor".equals(option)) {
+                overrides.absorptionColor = parseCsvColor(value, lineNumber, "sphere absorbcolor");
             } else {
                 throw parseError(lineNumber, "Unknown sphere option: " + option);
             }
@@ -456,6 +464,10 @@ public final class SceneFileLoader {
                 overrides.ior = parseDouble(value, lineNumber, "material ior");
             } else if ("metalness".equals(option)) {
                 overrides.metalness = parseDouble(value, lineNumber, "material metalness");
+            } else if ("absorption".equals(option)) {
+                overrides.absorptionStrength = parseDouble(value, lineNumber, "material absorption");
+            } else if ("absorbcolor".equals(option)) {
+                overrides.absorptionColor = parseCsvColor(value, lineNumber, "material absorbcolor");
             } else {
                 throw parseError(lineNumber, "Unknown material option: " + option);
             }
@@ -487,6 +499,8 @@ public final class SceneFileLoader {
         double transmission = baseMaterial != null ? baseMaterial.getTransmission() : 0.0;
         double ior = baseMaterial != null ? baseMaterial.getIor() : 1.5;
         double metalness = baseMaterial != null ? baseMaterial.getMetalness() : 0.0;
+        Color absorptionColor = baseMaterial != null ? baseMaterial.getAbsorptionColor() : Color.WHITE;
+        double absorptionStrength = baseMaterial != null ? baseMaterial.getAbsorptionStrength() : 0.0;
 
         if (overrides.specularStrength != null) {
             specular = overrides.specularStrength;
@@ -524,6 +538,12 @@ public final class SceneFileLoader {
         if (overrides.metalness != null) {
             metalness = overrides.metalness;
         }
+        if (overrides.absorptionColor != null) {
+            absorptionColor = overrides.absorptionColor;
+        }
+        if (overrides.absorptionStrength != null) {
+            absorptionStrength = overrides.absorptionStrength;
+        }
 
         return new Material(
             baseColor,
@@ -540,7 +560,9 @@ public final class SceneFileLoader {
             reflectivity,
             transmission,
             ior,
-            metalness
+            metalness,
+            absorptionColor,
+            absorptionStrength
         );
     }
 
@@ -555,6 +577,8 @@ public final class SceneFileLoader {
         resolved.transmission = overrides.transmission;
         resolved.ior = overrides.ior;
         resolved.metalness = overrides.metalness;
+        resolved.absorptionColor = overrides.absorptionColor;
+        resolved.absorptionStrength = overrides.absorptionStrength;
 
         resolved.albedoMapSet = overrides.albedoMapSet;
         resolved.normalMapSet = overrides.normalMapSet;
@@ -774,6 +798,8 @@ public final class SceneFileLoader {
         private Double transmission;
         private Double ior;
         private Double metalness;
+        private Color absorptionColor;
+        private Double absorptionStrength;
         private String albedoMapPath;
         private String normalMapPath;
         private String roughnessMapPath;
@@ -791,6 +817,8 @@ public final class SceneFileLoader {
                 || transmission != null
                 || ior != null
                 || metalness != null
+                || absorptionColor != null
+                || absorptionStrength != null
                 || albedoMapSet
                 || normalMapSet
                 || roughnessMapSet;
@@ -807,6 +835,8 @@ public final class SceneFileLoader {
         private Double transmission;
         private Double ior;
         private Double metalness;
+        private Color absorptionColor;
+        private Double absorptionStrength;
         private Texture2D albedoMap;
         private Texture2D normalMap;
         private Texture2D roughnessMap;

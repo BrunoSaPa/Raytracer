@@ -27,7 +27,7 @@ light point -1.5 1.4 -3.5 1 0.95 0.9 18
 
 # Materials
 material floorMat 0.9 0.9 0.9 roughness=0.5 spec=0.08
-material glass 1 1 1 spec=1 shininess=128 transmission=0.96 ior=1.5 reflectivity=0.04 roughness=0.0
+material glass 0.7 0.9 1 spec=1 shininess=128 transmission=0.96 ior=1.5 reflectivity=0.04 roughness=0.0 absorption=1.2 absorbcolor=0.7,0.9,1
 material metal 0.92 0.86 0.75 spec=1 shininess=256 reflectivity=0.9 metalness=1 roughness=0.1
 
 # Geometry

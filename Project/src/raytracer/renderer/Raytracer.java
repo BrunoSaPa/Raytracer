@@ -302,6 +302,11 @@ public class Raytracer {
                 Point3D refractionOrigin = closest.getPoint().add(refractionDirection.multiply(SECONDARY_RAY_EPSILON));
                 Intersection refractionHit = findClosestIntersection(new Ray(refractionOrigin, refractionDirection), SECONDARY_RAY_EPSILON, Double.POSITIVE_INFINITY);
                 Color refractionColor = traceRay(new Ray(refractionOrigin, refractionDirection), refractionHit, depth + 1, n2);
+                // Beer lmbert attenuation, when entering the medium, attenuate by traveled thickness before next hit, so thicker seems more tinted
+                if (frontFace && refractionHit != null) {
+                    Color absorption = material.computeAbsorptionTransmittance(refractionHit.getDistance());
+                    refractionColor = refractionColor.multiply(absorption);
+                }
                 result = result.add(refractionColor.multiply(refractionWeight));
             } else {
                 //total internal reflection fallback
