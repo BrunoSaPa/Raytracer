@@ -28,10 +28,12 @@ public final class MtlReader {
         Texture2D albedoMap = null;
         Texture2D normalMap = null;
         Texture2D roughnessMap = null;
+        Texture2D metalnessMap = null;
         Texture2D bumpMap = null;
         double bumpStrength = 1.0;
         double ior = 1.5;
         double transmission = 0.0;
+        double metalness = 0.0;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(mtlFile))) {
             String line;
@@ -49,7 +51,7 @@ public final class MtlReader {
                 String key = tokens[0].toLowerCase(Locale.ROOT);
                 if ("newmtl".equals(key)) {
                     if (currentName != null) {
-                        materials.put(currentName.toLowerCase(Locale.ROOT), buildMaterial(kd, ks, ns, albedoMap, normalMap, roughnessMap, bumpMap, bumpStrength, ior, transmission));
+                        materials.put(currentName.toLowerCase(Locale.ROOT), buildMaterial(kd, ks, ns, albedoMap, normalMap, roughnessMap, metalnessMap, bumpMap, bumpStrength, ior, transmission, metalness));
                     }
                     currentName = tokens[1];
                     kd = Color.WHITE;
@@ -58,10 +60,12 @@ public final class MtlReader {
                     albedoMap = null;
                     normalMap = null;
                     roughnessMap = null;
+                    metalnessMap = null;
                     bumpMap = null;
                     bumpStrength = 1.0;
                     ior = 1.5;
                     transmission = 0.0;
+                    metalness = 0.0;
                 } else if ("kd".equals(key) && tokens.length >= 4) {
                     kd = new Color(parseDouble(tokens[1]), parseDouble(tokens[2]), parseDouble(tokens[3]));
                 } else if ("ks".equals(key) && tokens.length >= 4) {
@@ -75,10 +79,14 @@ public final class MtlReader {
                     transmission = Math.max(transmission, 1.0 - opacity);
                 } else if ("tr".equals(key) && tokens.length >= 2) {
                     transmission = Math.max(transmission, Math.max(0.0, Math.min(1.0, parseDouble(tokens[1]))));
+                } else if ("pm".equals(key) && tokens.length >= 2) {
+                    metalness = Math.max(0.0, Math.min(1.0, parseDouble(tokens[1])));
                 } else if ("map_kd".equals(key)) {
                     albedoMap = loadTextureFromLine(trimmed, baseDir);
                 } else if ("map_pr".equals(key)) {
                     roughnessMap = loadTextureFromLine(trimmed, baseDir);
+                } else if ("map_pm".equals(key)) {
+                    metalnessMap = loadTextureFromLine(trimmed, baseDir);
                 } else if ("norm".equals(key) || "map_normal".equals(key)) {
                     normalMap = loadTextureFromLine(trimmed, baseDir);
                 } else if ("map_bump".equals(key) || "bump".equals(key)) {
@@ -89,7 +97,7 @@ public final class MtlReader {
         }
 
         if (currentName != null) {
-            materials.put(currentName.toLowerCase(Locale.ROOT), buildMaterial(kd, ks, ns, albedoMap, normalMap, roughnessMap, bumpMap, bumpStrength, ior, transmission));
+            materials.put(currentName.toLowerCase(Locale.ROOT), buildMaterial(kd, ks, ns, albedoMap, normalMap, roughnessMap, metalnessMap, bumpMap, bumpStrength, ior, transmission, metalness));
         }
 
         return materials;
@@ -102,13 +110,15 @@ public final class MtlReader {
         Texture2D albedoMap,
         Texture2D normalMap,
         Texture2D roughnessMap,
+        Texture2D metalnessMap,
         Texture2D bumpMap,
         double bumpStrength,
         double ior,
-        double transmission
+        double transmission,
+        double metalness
     ) {
         double specularStrength = Math.max(0.0, Math.min(1.0, (ks.getR() + ks.getG() + ks.getB()) / 3.0));
-        return new Material(kd, specularStrength, ns, ks, 0.0, 1.0, albedoMap, normalMap, roughnessMap, bumpMap, bumpStrength, 0.0, transmission, ior, 0.0);
+        return new Material(kd, specularStrength, ns, ks, 0.0, 1.0, albedoMap, normalMap, roughnessMap, metalnessMap, bumpMap, bumpStrength, 0.0, transmission, ior, metalness);
     }
 
     private static double parseBumpStrengthFromLine(String line) {

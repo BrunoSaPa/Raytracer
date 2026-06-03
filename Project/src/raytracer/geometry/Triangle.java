@@ -183,6 +183,7 @@ public class Triangle implements Object3D {
             material != null ? material.getAlbedoTexture() : null,
             material != null ? material.getNormalTexture() : null,
             material != null ? material.getRoughnessTexture() : null,
+            material != null ? material.getMetalnessTexture() : null,
             material != null ? material.getBumpTexture() : null,
             material != null ? material.getBumpStrength() : 1.0,
             reflectivity,

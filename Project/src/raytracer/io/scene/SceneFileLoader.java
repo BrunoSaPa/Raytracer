@@ -304,6 +304,9 @@ public final class SceneFileLoader {
             } else if ("roughnessmap".equals(option)) {
                 overrides.roughnessMapPath = value;
                 overrides.roughnessMapSet = true;
+            } else if ("metalnessmap".equals(option)) {
+                overrides.metalnessMapPath = value;
+                overrides.metalnessMapSet = true;
             } else if ("reflectivity".equals(option)) {
                 overrides.reflectivity = parseDouble(value, lineNumber, "mesh reflectivity");
             } else if ("transmission".equals(option)) {
@@ -418,6 +421,9 @@ public final class SceneFileLoader {
             } else if ("roughnessmap".equals(option)) {
                 overrides.roughnessMapPath = value;
                 overrides.roughnessMapSet = true;
+            } else if ("metalnessmap".equals(option)) {
+                overrides.metalnessMapPath = value;
+                overrides.metalnessMapSet = true;
             } else if ("reflectivity".equals(option)) {
                 overrides.reflectivity = parseDouble(value, lineNumber, "sphere reflectivity");
             } else if ("transmission".equals(option)) {
@@ -497,6 +503,9 @@ public final class SceneFileLoader {
             } else if ("roughnessmap".equals(option)) {
                 overrides.roughnessMapPath = value;
                 overrides.roughnessMapSet = true;
+            } else if ("metalnessmap".equals(option)) {
+                overrides.metalnessMapPath = value;
+                overrides.metalnessMapSet = true;
             } else if ("reflectivity".equals(option)) {
                 overrides.reflectivity = parseDouble(value, lineNumber, "material reflectivity");
             } else if ("transmission".equals(option)) {
@@ -534,6 +543,7 @@ public final class SceneFileLoader {
         Texture2D albedoMap = baseMaterial != null ? baseMaterial.getAlbedoTexture() : null;
         Texture2D normalMap = baseMaterial != null ? baseMaterial.getNormalTexture() : null;
         Texture2D roughnessMap = baseMaterial != null ? baseMaterial.getRoughnessTexture() : null;
+        Texture2D metalnessMap = baseMaterial != null ? baseMaterial.getMetalnessTexture() : null;
         Texture2D bumpMap = baseMaterial != null ? baseMaterial.getBumpTexture() : null;
         double bumpStrength = baseMaterial != null ? baseMaterial.getBumpStrength() : 1.0;
         double reflectivity = baseMaterial != null ? baseMaterial.getReflectivity() : 0.0;
@@ -567,6 +577,9 @@ public final class SceneFileLoader {
         if (overrides.roughnessMapSet) {
             roughnessMap = overrides.roughnessMap;
         }
+        if (overrides.metalnessMapSet) {
+            metalnessMap = overrides.metalnessMap;
+        }
         if (overrides.reflectivity != null) {
             reflectivity = overrides.reflectivity;
         }
@@ -596,6 +609,7 @@ public final class SceneFileLoader {
             albedoMap,
             normalMap,
             roughnessMap,
+            metalnessMap,
             bumpMap,
             bumpStrength,
             reflectivity,
@@ -624,6 +638,7 @@ public final class SceneFileLoader {
         resolved.albedoMapSet = overrides.albedoMapSet;
         resolved.normalMapSet = overrides.normalMapSet;
         resolved.roughnessMapSet = overrides.roughnessMapSet;
+        resolved.metalnessMapSet = overrides.metalnessMapSet;
 
         if (overrides.albedoMapSet) {
             resolved.albedoMap = loadOptionalTexture(overrides.albedoMapPath, baseDir);
@@ -633,6 +648,9 @@ public final class SceneFileLoader {
         }
         if (overrides.roughnessMapSet) {
             resolved.roughnessMap = loadOptionalTexture(overrides.roughnessMapPath, baseDir);
+        }
+        if (overrides.metalnessMapSet) {
+            resolved.metalnessMap = loadOptionalTexture(overrides.metalnessMapPath, baseDir);
         }
         return resolved;
     }
@@ -860,9 +878,11 @@ public final class SceneFileLoader {
         private String albedoMapPath;
         private String normalMapPath;
         private String roughnessMapPath;
+        private String metalnessMapPath;
         private boolean albedoMapSet;
         private boolean normalMapSet;
         private boolean roughnessMapSet;
+        private boolean metalnessMapSet;
 
         private boolean hasAnyOverride() {
             return specularStrength != null
@@ -878,7 +898,8 @@ public final class SceneFileLoader {
                 || absorptionStrength != null
                 || albedoMapSet
                 || normalMapSet
-                || roughnessMapSet;
+                || roughnessMapSet
+                || metalnessMapSet;
         }
     }
 
@@ -897,9 +918,11 @@ public final class SceneFileLoader {
         private Texture2D albedoMap;
         private Texture2D normalMap;
         private Texture2D roughnessMap;
+        private Texture2D metalnessMap;
         private boolean albedoMapSet;
         private boolean normalMapSet;
         private boolean roughnessMapSet;
+        private boolean metalnessMapSet;
     }
 }
 

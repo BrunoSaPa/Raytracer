@@ -144,6 +144,8 @@ mesh path r g b culling [options]
   - `normalstrength=double` (>= 0, default 1)
   - `roughness=double` (0..1)
   - `roughnessmap=relative/or/absolute/path.png`
+  - `metalness=double` (0..1)
+  - `metalnessmap=relative/or/absolute/path.png`
 - Material layering behavior:
   - If OBJ has MTLs, they stay intact by default.
   - `material=name` replaces base material for all sub-meshes from that line.
@@ -162,7 +164,7 @@ mesh mesh/bunny.obj 0 0 1 none fit=5 translate=0,0,-4 rotate=0,90,0 spec=1 shini
 sphere cx cy cz radius r g b [options]
 ```
 
-- optional sphere options: `spec=`, `shininess=`, `speccolor=`, `material=`, `albedomap=`, `normalmap=`, `normalstrength=`, `roughness=`, `roughnessmap=`
+- optional sphere options: `spec=`, `shininess=`, `speccolor=`, `material=`, `albedomap=`, `normalmap=`, `normalstrength=`, `roughness=`, `roughnessmap=`, `metalness=`, `metalnessmap=`
 - Sphere material options follow the same override behavior as meshes.
 
 ### Materials
@@ -187,6 +189,7 @@ material name inherit=baseName [options]
   - `normalmap=relative/or/absolute/path.png`
   - `normalstrength=double` (>= 0, default 1)
   - `roughnessmap=relative/or/absolute/path.png`
+  - `metalnessmap=relative/or/absolute/path.png`
   - `reflectivity=double` (0..1)
   - `transmission=double` (0..1)
   - `ior=double` (>= 1, glass often ~1.5)
@@ -197,10 +200,12 @@ material name inherit=baseName [options]
 Notes:
 - Transparent materials cast colored transmission shadows using per-hit transmittance along the shadow ray.
 - Metal workflow uses the same material model (`metalness` high, `transmission` near 0).
+- When `metalnessmap` is provided, per hit sampled map values drive metal/dielectric blending in shading and shadow transmittance.
 
 ## OBJ + MTL notes
 
 - If an OBJ includes `mtllib` and `usemtl`, the loader reads the MTL file and resolves its texture maps.
+- MTL `map_Pm` and scalar `Pm` are supported for metalness when present.
 - Texture paths in MTL are resolved relative to the MTL file location.
 - Per-face `usemtl` changes are preserved by creating one mesh per material group (`ObjReader.loadAsMeshes(...)`).
 - `ObjReader.loadAsMesh(...)` remains as backward-compatible merged output and does not preserve per-face material regions.

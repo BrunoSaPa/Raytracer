@@ -1,0 +1,56 @@
+# Metalness / Roughness validation scene
+# Columns vary roughness (left to right), rows vary metalness (bottom to top)
+
+# Camera
+camera position 0 2 8
+camera lookAt 0 1 -5
+camera up 0 1 0
+camera fov 55
+camera near 0.01
+camera far 1000
+
+# Render
+render width 1920
+render height 1080
+render background 0.02 0.02 0.03
+render output output/metalness_test.png
+render shadowSamples 8
+render pointLightRadius 0.2
+render maxDepth 5
+
+render backgroundMap "hdri/newman_locker_room_4k.hdr"
+render backgroundExposure 0.85
+
+# Lights
+light point 2 5 3 1 1 1 35
+light point -4 3 2 1 0.95 0.9 18
+
+# Floor
+material floorMat 0.75 0.75 0.78 spec=0.05 roughness=1 reflectivity=0.0 metalness=0.0
+mesh mesh/testmesh.obj 1 1 1 back material=floorMat scale=35 translate=0,-0.05,-6
+
+# Test materials (roughness sweep)
+material m_r10 0.9 0.3 0.2 spec=0.5 shininess=120 reflectivity=0.25 roughness=0.10
+material m_r35 0.9 0.3 0.2 spec=0.5 shininess=90 reflectivity=0.25 roughness=0.35
+material m_r60 0.9 0.3 0.2 spec=0.5 shininess=60 reflectivity=0.25 roughness=0.60
+material m_r85 0.9 0.3 0.2 spec=0.5 shininess=30 reflectivity=0.25 roughness=0.85
+
+# Bottom row: metalness 0.0 (dielectric)
+sphere -3.0 0.9 -4.0 0.9 1 1 1 material=m_r10 metalness=0.0
+sphere -1.0 0.9 -4.0 0.9 1 1 1 material=m_r35 metalness=0.0
+sphere 1.0 0.9 -4.0 0.9 1 1 1 material=m_r60 metalness=0.0
+sphere 3.0 0.9 -4.0 0.9 1 1 1 material=m_r85 metalness=0.0
+
+# Middle row: metalness 0.5 (blend)
+sphere -3.0 2.9 -4.0 0.9 1 1 1 material=m_r10 metalness=0.5
+sphere -1.0 2.9 -4.0 0.9 1 1 1 material=m_r35 metalness=0.5
+sphere 1.0 2.9 -4.0 0.9 1 1 1 material=m_r60 metalness=0.5
+sphere 3.0 2.9 -4.0 0.9 1 1 1 material=m_r85 metalness=0.5
+
+# Top row: metalness 1.0 (fully metallic)
+sphere -3.0 4.9 -4.0 0.9 1 1 1 material=m_r10 metalness=1.0
+sphere -1.0 4.9 -4.0 0.9 1 1 1 material=m_r35 metalness=1.0
+sphere 1.0 4.9 -4.0 0.9 1 1 1 material=m_r60 metalness=1.0
+sphere 3.0 4.9 -4.0 0.9 1 1 1 material=m_r85 metalness=1.0
+
+

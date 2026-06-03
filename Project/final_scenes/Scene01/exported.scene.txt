@@ -1,0 +1,70 @@
+# Exported from Blender — test.blend
+# Material mode: MULTI (per-face MTL)
+
+# Camera
+camera position 1.09635 1.00318 1.86756
+camera lookAt 0.347242 0.667059 1.29672
+camera up -0.267346 0.941819 -0.203723
+camera fov 26.99
+camera near 0.1
+camera far 100
+
+# Render
+render width 1920
+render height 1080
+render background 0.05088 0.05088 0.05088
+render output output/render.png
+render tile 64
+render shadowSamples 16
+render pointLightRadius 0.25
+render spotLightRadius 0.15
+render directionalAngle 0.4
+render maxDepth 4
+
+# Lights
+light point 3.55625 5.90386 3.67455 1 1 1 50
+light point -1.4 1.30907 -0.02 1 0.725 0.3701 0.75
+
+# Materials  (reference — per-face assignments live in .mtl files)
+# To override a whole mesh, add  material=<name>  to its mesh line.
+material Leather_soft 1 1 1 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1 albedomap="mesh/textures/Chocofur_Leather_Simple_07_diff.jpg" roughnessmap="mesh/textures/Chocofur_Leather_Simple_07_diff.jpg"
+material Leather 1 1 1 spec=1 shininess=32 roughness=0.5 speccolor=1,1,1 albedomap="mesh/textures/Chocofur_Leather_Simple_07_diff.jpg" normalmap="mesh/textures/Chocofur_Leather_Simple_07_diff.jpg" roughnessmap="mesh/textures/Chocofur_Leather_Simple_07_diff.jpg"
+material Gold 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material WoodFineDark002_4K 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1 normalmap="mesh/textures/WoodFineDark002_NRM_4K.jpg" roughnessmap="mesh/textures/WoodFineDark002_GLOSS_4K.jpg"
+material GCT_Glass 1 1 1 spec=0.5 shininess=512 roughness=0 speccolor=1,1,1 transmission=1 ior=1.45
+material carpet_002 1 1 1 spec=0.5 shininess=17 roughness=0.5709 speccolor=1,1,1 metalness=0.09091 reflectivity=0.08182 albedomap="mesh/textures/color.jpg" normalmap="mesh/textures/normal.jpg" normalstrength=1
+material Procedural_Wood_001 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material Material_002 0.005191 0.005191 0.005191 spec=0.5 shininess=162 roughness=0.25 speccolor=0.005191,0.005191,0.005191 metalness=0.5 reflectivity=0.45
+material Cooper 1 0.3846 0.2436 spec=0.5 shininess=458 roughness=0.02727 speccolor=1,0.3846,0.2436 metalness=1 reflectivity=0.9 normalmap="mesh/textures/3_scratches.jpg"
+material ErodedCooper 1 0.3846 0.2436 spec=1 shininess=210 roughness=0.2 speccolor=1,0.3846,0.2436 metalness=1 reflectivity=0.9 normalmap="mesh/textures/MetRust_4K_normal.jpg" normalstrength=1
+material Plastic_Black_Insulator 0.002 0.002 0.002 spec=0.5 shininess=13 roughness=0.6 speccolor=1,1,1
+material Metal_Chrome 0.8 0.8 0.8 spec=0.5 shininess=210 roughness=0.2 speccolor=0.8,0.8,0.8 metalness=1 reflectivity=0.9
+material Plastic_Black_Shiny 0.01 0.01 0.01 spec=0.5 shininess=210 roughness=0.2 speccolor=1,1,1
+material Lamp_Bulb 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material Material_001 0.8 0.7499 0.6999 spec=0.5 shininess=4 roughness=0.7 speccolor=1,1,1
+material WoodenWall 1 1 1 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1 albedomap="mesh/textures/drevena stena_COLOR.png"
+material WoodePanel_Background 0.1332 0.1332 0.1332 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material Furniture_Wood 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material Furniture_Wood_Darker 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material Furniture_Wood_Darker_2 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+material default 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+
+# Meshes
+mesh mesh/Sofa_crease.obj 1 1 1 back material=Leather
+mesh mesh/Sofa_body.obj 1 1 1 back material=Leather_soft
+mesh mesh/Legs.obj 1 1 1 back material=Gold
+mesh mesh/WoodSupport_002.obj 1 1 1 back material=WoodFineDark002_4K
+mesh mesh/WoodSupport_001.obj 1 1 1 back material=WoodFineDark002_4K
+mesh mesh/GlassTop.obj 1 1 1 back material=GCT_Glass
+mesh mesh/Beige_Carpet.obj 1 1 1 back material=carpet_002
+mesh mesh/Plane.obj 1 1 1 back material=Procedural_Wood_001
+mesh mesh/Abstract_sculpture.obj 1 1 1 back material=Material_002
+mesh mesh/ESC_4Base.obj 1 1 1 back
+mesh mesh/ESC_4.obj 1 1 1 back
+mesh mesh/FloroLamp_WirePlug.obj 1 1 1 back  material=Plastic_Black_Insulator
+mesh mesh/FloorLamp_Stem.obj 1 1 1 back  material=Metal_Chrome
+mesh mesh/FloorLamp_Cover.obj 1 1 1 back
+mesh mesh/FloorLamp_Bulb.obj 1 1 1 back material=Lamp_Bulb
+mesh mesh/WoodenWall_100x100cm.obj 1 1 1 back  material=WoodenWall
+mesh mesh/Wood_Parquet_Flooring.obj 1 1 1 back  material=WoodePanel_Background
+

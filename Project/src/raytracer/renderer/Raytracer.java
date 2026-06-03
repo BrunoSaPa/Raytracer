@@ -275,7 +275,7 @@ public class Raytracer {
             return litColor;
         }
 
-        double effectiveMetalness = clamp01(material.getMetalness());
+        double effectiveMetalness = material.sampleMetalness(closest);
         //metalness increases reflection and dupresses refraction and transparency
         double effectiveReflectivity = clamp01(material.getReflectivity() + effectiveMetalness * (1.0 - material.getReflectivity()));
         double effectiveTransmission = clamp01(material.getTransmission() * (1.0 - effectiveMetalness));
@@ -396,7 +396,8 @@ public class Raytracer {
             }
 
             Material blockerMaterial = blocker.getObject().getMaterial();
-            double transmission = clamp01(blockerMaterial.getTransmission() * (1.0 - blockerMaterial.getMetalness()));
+            double blockerMetalness = blockerMaterial.sampleMetalness(blocker);
+            double transmission = clamp01(blockerMaterial.getTransmission() * (1.0 - blockerMetalness));
             if (transmission <= 0.0) {
                 return Color.BLACK;
             }
