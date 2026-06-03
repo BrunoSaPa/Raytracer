@@ -7,8 +7,8 @@ camera up 0 1 0
 camera fov 60
 camera near 0.01
 camera far 1000
-camera aperture 0.1
-camera focusDistance 2.0
+#camera aperture 0.1
+#camera focusDistance 2.0
 
 # Render
 render width 2080
@@ -21,7 +21,9 @@ render shadowSamples 8
 render pointLightRadius 0.15
 render directionalAngle 0.25
 render maxDepth 5
-render dofSamples 16
+#render dofSamples 16
+render backgroundMap "hdri/newman_locker_room_4k.hdr"
+render backgroundExposure 0.7
 
 # Lights
 light directional 0 -1 -1 1 1 1 0.3
@@ -37,5 +39,5 @@ material metal 0.92 0.86 0.75 spec=1 shininess=256 reflectivity=0.9 metalness=1 
 mesh mesh/testmesh.obj 1 1 1 back material=floorMat scale=24 translate=0,-1.2,-4
 sphere -0.8 -0.1 -4.1 0.9 1 1 1 material=glass
 sphere 1.0 -0.15 -4.6 0.85 1 1 1 material=metal
-mesh mesh/lphead/head.OBJ 1 1 1 none fit=1.2 rotate=0,335,0 translate=0,0,-.5
+mesh mesh/lphead/head.OBJ 1 1 1 none fit=1.2 rotate=0,335,0 translate=0,0,-2.5
 

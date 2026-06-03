@@ -39,6 +39,8 @@ public final class SceneFileLoader {
         int width = DEFAULT_WIDTH;
         int height = DEFAULT_HEIGHT;
         Color background = Color.BLACK;
+        String backgroundMapPath = null;
+        double backgroundExposure = 1.0;
         String outputPath = "output/render.png";
         int threadCount = Math.max(1, Runtime.getRuntime().availableProcessors());
         int tileSize = 32;
@@ -120,6 +122,12 @@ public final class SceneFileLoader {
                     } else if ("background".equals(key)) {
                         requireTokenCount(tokens, 5, lineNumber, "render background r g b");
                         background = parseColor(tokens, 2, lineNumber);
+                    } else if ("backgroundmap".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render backgroundMap path.hdr");
+                        backgroundMapPath = resolvePath(tokens[2], baseDir).getPath();
+                    } else if ("backgroundexposure".equals(key)) {
+                        requireTokenCount(tokens, 3, lineNumber, "render backgroundExposure value");
+                        backgroundExposure = parseDouble(tokens[2], lineNumber, "render backgroundExposure");
                     } else if ("threads".equals(key)) {
                         requireTokenCount(tokens, 3, lineNumber, "render threads value");
                         threadCount = parseInt(tokens[2], lineNumber, "render threads");
@@ -197,7 +205,8 @@ public final class SceneFileLoader {
             maxRayDepth,
             dofSamples,
             apertureRadius,
-            focusDistance
+            focusDistance,
+            backgroundExposure
         );
 
         double resolvedFocusDistance = focusDistance != null
@@ -221,6 +230,8 @@ public final class SceneFileLoader {
             width,
             height,
             background,
+            backgroundMapPath,
+            backgroundExposure,
             outputPath,
             threadCount,
             tileSize,
@@ -727,7 +738,8 @@ public final class SceneFileLoader {
         int maxRayDepth,
         int dofSamples,
         double apertureRadius,
-        Double focusDistance
+        Double focusDistance,
+        double backgroundExposure
     ) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Render width and height must be > 0.");
@@ -764,6 +776,9 @@ public final class SceneFileLoader {
         }
         if (focusDistance != null && focusDistance <= 0.0) {
             throw new IllegalArgumentException("Camera focusDistance must be > 0 when provided.");
+        }
+        if (backgroundExposure <= 0.0) {
+            throw new IllegalArgumentException("Render backgroundExposure must be > 0.");
         }
     }
 

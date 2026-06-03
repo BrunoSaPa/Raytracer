@@ -10,6 +10,8 @@ camera far 1000
 render width 1080
 render height 1080
 render background 0 0 0
+# render backgroundMap "path/to/environment.hdr"
+# render backgroundExposure 0.75
 render output output/render.png
 #soft shadows things
 render shadowSamples 16

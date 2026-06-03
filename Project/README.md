@@ -83,6 +83,8 @@ camera focusDistance value
 render width int
 render height int
 render background r g b
+render backgroundMap path/to/file.hdr
+render backgroundExposure double
 render output path
 render threads int
 render tile int
@@ -102,6 +104,8 @@ render dofSamples int
 - DoF controls are optional, defaults keep pinhole rendering.
 - `camera aperture > 0` enables thin-lens behavior and `render dofSamples` controls per pixel lens samples.
 - `camera focusDistance` is the distance from the camera where objects remain sharp.
+- `render backgroundMap` is optional and only affects rays that miss geometry (background/miss shader) current implementation supports Radiance `.hdr` files.
+- `render backgroundExposure` scales HDRI intensity before output (default `1.0`).
 
 Example DoF setup:
 

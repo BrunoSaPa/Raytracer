@@ -1,5 +1,6 @@
 import raytracer.io.scene.SceneFileLoader;
 import raytracer.io.scene.SceneLoadResult;
+import raytracer.renderer.EnvironmentMap;
 import raytracer.renderer.Raytracer;
 
 public class Main {
@@ -16,6 +17,10 @@ public class Main {
 
         try {
             SceneLoadResult loaded = SceneFileLoader.load(scenePath);
+            EnvironmentMap environmentMap = null;
+            if (loaded.getBackgroundMapPath() != null && !loaded.getBackgroundMapPath().isEmpty()) {
+                environmentMap = EnvironmentMap.loadHdr(loaded.getBackgroundMapPath(), loaded.getBackgroundExposure());
+            }
             Raytracer raytracer = new Raytracer(
                 loaded.getScene(),
                 loaded.getCamera(),
@@ -29,7 +34,8 @@ public class Main {
                 loaded.getSpotLightRadius(),
                 loaded.getDirectionalLightAngleDegrees(),
                 loaded.getMaxRayDepth(),
-                loaded.getDofSamples()
+                loaded.getDofSamples(),
+                environmentMap
             );
             raytracer.render(loaded.getOutputPath());
         } catch (Exception e) {

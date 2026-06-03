@@ -10,6 +10,8 @@ public class SceneLoadResult {
     private final int width;
     private final int height;
     private final Color backgroundColor;
+    private final String backgroundMapPath;
+    private final double backgroundExposure;
     private final String outputPath;
     private final int threadCount;
     private final int tileSize;
@@ -26,6 +28,8 @@ public class SceneLoadResult {
         int width,
         int height,
         Color backgroundColor,
+        String backgroundMapPath,
+        double backgroundExposure,
         String outputPath,
         int threadCount,
         int tileSize,
@@ -41,6 +45,8 @@ public class SceneLoadResult {
         this.width = width;
         this.height = height;
         this.backgroundColor = backgroundColor;
+        this.backgroundMapPath = backgroundMapPath;
+        this.backgroundExposure = backgroundExposure;
         this.outputPath = outputPath;
         this.threadCount = threadCount;
         this.tileSize = tileSize;
@@ -70,6 +76,14 @@ public class SceneLoadResult {
 
     public Color getBackgroundColor() {
         return backgroundColor;
+    }
+
+    public String getBackgroundMapPath() {
+        return backgroundMapPath;
+    }
+
+    public double getBackgroundExposure() {
+        return backgroundExposure;
     }
 
     public String getOutputPath() {

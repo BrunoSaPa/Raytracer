@@ -30,6 +30,7 @@ public class Raytracer {
     private int width;
     private int height;
     private Color backgroundColor;
+    private EnvironmentMap environmentMap;
     private final int threadCount;
     private final int tileSize;
     private final SoftShadowSettings softShadowSettings;
@@ -55,12 +56,13 @@ public class Raytracer {
             0.0,
             0.0,
             4,
-            1
+            1,
+            null
         );
     }
 
     public Raytracer(Scene scene, Camera camera, int width, int height, Color backgroundColor, int threadCount, int tileSize) {
-        this(scene, camera, width, height, backgroundColor, threadCount, tileSize, 1, 0.0, 0.0, 0.0, 4, 1);
+        this(scene, camera, width, height, backgroundColor, threadCount, tileSize, 1, 0.0, 0.0, 0.0, 4, 1, null);
     }
 
     public Raytracer(
@@ -76,13 +78,15 @@ public class Raytracer {
         double spotLightRadius,
         double directionalLightAngleDegrees,
         int maxRayDepth,
-        int dofSamples
+        int dofSamples,
+        EnvironmentMap environmentMap
     ) {
         this.scene = scene;
         this.camera = camera;
         this.width = width;
         this.height = height;
         this.backgroundColor = backgroundColor;
+        this.environmentMap = environmentMap;
         this.threadCount = Math.max(1, threadCount);
         this.tileSize = Math.max(8, tileSize);
         this.softShadowSettings = new SoftShadowSettings(
@@ -201,7 +205,7 @@ public class Raytracer {
 
     private Color traceRay(Ray ray, Intersection closest, int depth, double currentIor) {
         if (closest == null) {
-            return backgroundColor;
+            return sampleBackground(ray.getDirection());
         }
 
         Material material = closest.getObject().getMaterial();
@@ -418,5 +422,12 @@ public class Raytracer {
     //skip early if nearly black
     private boolean isNearlyBlack(Color color) {
         return color.getR() < MIN_SHADOW_TRANSMITTANCE && color.getG() < MIN_SHADOW_TRANSMITTANCE && color.getB() < MIN_SHADOW_TRANSMITTANCE;
+    }
+
+    private Color sampleBackground(Vector3D direction) {
+        if (environmentMap != null) {
+            return environmentMap.sampleDirection(direction);
+        }
+        return backgroundColor;
     }
 }
