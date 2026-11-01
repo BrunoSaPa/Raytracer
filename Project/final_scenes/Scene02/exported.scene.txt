@@ -1,0 +1,98 @@
+# Exported from Blender — mars.blend
+# Material mode: split
+
+# Camera
+camera position -68.6724 53.0487 131.195
+camera lookAt -68.2051 52.8763 130.328
+camera up 0.0818047 0.985021 -0.151792
+camera fov 26.99
+camera near 0.1
+camera far 1e+04
+
+# Render
+render width 4096
+render height 2160
+render background 0.05088 0.05088 0.05088
+render output output/render.png
+render tile 64
+render shadowSamples 16
+render pointLightRadius 0.25
+render spotLightRadius 0.15
+render directionalAngle 0.4
+render maxDepth 4
+
+
+camera aperture 2
+camera focusDistance 140
+render dofSamples 16
+render backgroundMap "hdri/satara_night_no_lamps_4k.hdr"
+light directional 0 -1 -1 1 1 1 0.9
+
+# Lights
+light point 3.27625 25.7639 13.4545 1 1 1 300
+light point 29.9362 37.3239 -26.0055 1 1 1 300
+
+# Materials
+material Crater_hero_UDIMS_RED_01 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=1 speccolor=1,1,1 normalmap="mesh/textures/Crater_hero_normal_01.jpg" normalstrength=1 roughnessmap="mesh/textures/Crater_hero_rough_01.jpg" albedomap="mesh/textures/Crater_hero_RED_color_01.jpg"
+material Crater_hero_UDIMS_RED_02 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=1 speccolor=1,1,1 normalmap="mesh/textures/Crater_hero_normal_02.jpg" normalstrength=1 roughnessmap="mesh/textures/Crater_hero_rough_02.jpg" albedomap="mesh/textures/Crater_hero_RED_color_02.jpg"
+material Crater_hero_UDIMS_RED_03 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=1 speccolor=1,1,1 normalmap="mesh/textures/Crater_hero_normal_03.jpg" normalstrength=1 roughnessmap="mesh/textures/Crater_hero_rough_03.jpg" albedomap="mesh/textures/Crater_hero_RED_color_03.jpg"
+material Crater_hero_UDIMS_RED_04 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=1 speccolor=1,1,1 normalmap="mesh/textures/Crater_hero_normal_04.jpg" normalstrength=1 roughnessmap="mesh/textures/Crater_hero_rough_04.jpg" albedomap="mesh/textures/Crater_hero_RED_color_04.jpg"
+material Stainless_Steel 1 1 1 spec=1 shininess=120 roughness=0.8 speccolor=1,1,1 metalness=0.8 reflectivity=0.25
+material Heat_tiles 0 0 0 spec=0.2727 shininess=32 roughness=0.5 speccolor=1,1,1
+material Material_#2125643152 1 1 1 spec=0 shininess=32 roughness=0.5 speccolor=1,1,1 albedomap="mesh/textures/24 - Default_Base_Color.jpg" normalmap="mesh/textures/24 - Default_Normal_OpenGL.jpg" normalstrength=1 roughnessmap="mesh/textures/24 - Default_Roughness.jpg"
+material Material_#2125643153 0.01341 0.01341 0.01341 spec=0.5 shininess=20 roughness=0.5528 speccolor=0.01341,0.01341,0.01341 metalness=1 reflectivity=0.9
+material Neon 1 1 1 spec=0 shininess=20 roughness=0.5528 speccolor=1,1,1 albedomap="mesh/textures/futuristic-high-tech-control-panel-displaying-a-speedometer-and-tachometer-like-screen-on-a-black-background_4gegahb0dg__F0000.jpg"
+material Neon222 1 1 1 spec=0 shininess=20 roughness=0.5528 speccolor=1,1,1 albedomap="mesh/textures/hud_39_preview_large-.jpg"
+material Material_#0 1 1 1 spec=0 shininess=32 roughness=0.5 speccolor=1,1,1 albedomap="mesh/textures/19 - Default_Base_Color.jpg" normalmap="mesh/textures/19 - Default_Normal_OpenGL.jpg" normalstrength=1 roughnessmap="mesh/textures/19 - Default_Roughness.jpg"
+material Stainless_Steel.001 1 1 1 spec=1 shininess=32 roughness=0.5 speccolor=1,1,1 metalness=1 reflectivity=0.9
+material Booster_flaps 0 0 0 spec=0.2727 shininess=32 roughness=0.5 speccolor=1,1,1
+material Raptor_Engine 0.8 0.8 0.8 spec=0 shininess=32 roughness=0.5 speccolor=0.8,0.8,0.8 metalness=1 reflectivity=0.9
+material default 0.8 0.8 0.8 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1
+
+# Meshes
+mesh mesh/Crater_hero__RED__Crater_hero_UDIMS_RED_01.obj 1 1 1 back material=Crater_hero_UDIMS_RED_01
+mesh mesh/Crater_hero__RED__Crater_hero_UDIMS_RED_02.obj 1 1 1 back material=Crater_hero_UDIMS_RED_02
+mesh mesh/Crater_hero__RED__Crater_hero_UDIMS_RED_03.obj 1 1 1 back material=Crater_hero_UDIMS_RED_03
+mesh mesh/Crater_hero__RED__Crater_hero_UDIMS_RED_04.obj 1 1 1 back material=Crater_hero_UDIMS_RED_04
+mesh mesh/S20_FWD_Right_Flap__Stainless_Steel.obj 1 1 1 back material=Stainless_Steel
+mesh mesh/S20_FWD_Right_Flap__Heat_tiles.obj 1 1 1 back material=Heat_tiles
+mesh mesh/S20_FWD_Left_Flap__Stainless_Steel.obj 1 1 1 back material=Stainless_Steel
+mesh mesh/S20_FWD_Left_Flap__Heat_tiles.obj 1 1 1 back material=Heat_tiles
+mesh mesh/S20_AFT_With_Raptors__Stainless_Steel.obj 1 1 1 back material=Stainless_Steel
+mesh mesh/S20_AFT_With_Raptors__Heat_tiles.obj 1 1 1 back material=Heat_tiles
+mesh mesh/S20_AFT_Right_Flap__Stainless_Steel.obj 1 1 1 back material=Stainless_Steel
+mesh mesh/S20_AFT_Right_Flap__Heat_tiles.obj 1 1 1 back material=Heat_tiles
+mesh mesh/S20_AFT_Left_Flap__Stainless_Steel.obj 1 1 1 back material=Stainless_Steel
+mesh mesh/S20_AFT_Left_Flap__Heat_tiles.obj 1 1 1 back material=Heat_tiles
+mesh mesh/Sci-Fi_Element_type_8_016.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_015.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_014.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_013.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_012__Material_#2125643152.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_012__Material_#2125643153.obj 1 1 1 back material=Material_#2125643153
+mesh mesh/Sci-Fi_Element_type_8_011__Material_#2125643152.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_011__Material_#2125643153.obj 1 1 1 back material=Material_#2125643153
+mesh mesh/Sci-Fi_Element_type_8_010.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_009.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_008.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_007.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_006.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_005__Material_#2125643152.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_005__Material_#2125643153.obj 1 1 1 back material=Material_#2125643153
+mesh mesh/Sci-Fi_Element_type_8_004.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_003.obj 1 1 1 back material=Neon222
+mesh mesh/Sci-Fi_Element_type_8_002.obj 1 1 1 back material=Neon
+mesh mesh/Sci-Fi_Element_type_8_001__Material_#2125643152.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8_001__Material_#2125643153.obj 1 1 1 back material=Material_#2125643153
+mesh mesh/Sci-Fi_Element_type_8__Material_#2125643152.obj 1 1 1 back material=Material_#2125643152
+mesh mesh/Sci-Fi_Element_type_8__Material_#2125643153.obj 1 1 1 back material=Material_#2125643153
+mesh mesh/Sci-Fi_Element_type_9__005.obj 1 1 1 back material=Material_#0
+mesh mesh/Sci-Fi_Element_type_9__004.obj 1 1 1 back material=Material_#0
+mesh mesh/Sci-Fi_Element_type_9__003.obj 1 1 1 back material=Material_#0
+mesh mesh/Sci-Fi_Element_type_9__002.obj 1 1 1 back material=Material_#0
+mesh mesh/Sci-Fi_Element_type_9__001.obj 1 1 1 back material=Material_#0
+mesh mesh/Sci-Fi_Element_type_9_.obj 1 1 1 back material=Material_#0
+mesh mesh/Super_heavy__Stainless_Steel_001.obj 1 1 1 back material=Stainless_Steel
+mesh mesh/Super_heavy__Booster_flaps.obj 1 1 1 back material=Booster_flaps
+mesh mesh/Super_heavy__Raptor_Engine.obj 1 1 1 back material=Raptor_Engine
+

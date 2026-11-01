@@ -1,0 +1,43 @@
+# Exported from Blender — skull.blend
+# Material mode: split
+
+# Camera
+camera position 0.337831 1.28399 0.605969
+camera lookAt -0.0157914 1.19266 -0.324949
+camera up -0.0324343 0.99582 -0.0853852
+camera fov 26.99
+camera near 0.1
+camera far 100
+
+# Render
+render width 4096
+render height 2160
+render background 0.05088 0.05088 0.05088
+render output output/render.png
+render tile 64
+render pointLightRadius 0.25
+render maxDepth 4
+
+#render shadowSamples 16
+camera aperture 0.0065
+camera focusDistance 0.5
+render dofSamples 16
+render backgroundMap "hdri/rainforest_trail_4k.hdr"
+
+
+
+# Lights
+light point 4.07625 5.64386 2.71455 1 1 1 20
+light point -4.08375 5.64386 2.75455 1 1 1 40
+
+# Materials
+material Skeleton_old_full_texture 1 1 1 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1 metalness=0 reflectivity=0 albedomap="mesh/textures/Skeleton_full_texture_BaseColor.jpg" normalmap="mesh/textures/Skeleton_full_texture_Normal_OpenGL.jpg" normalstrength=1 roughnessmap="mesh/textures/Skeleton_full_texture_Roughness.jpg" metalnessmap="mesh/textures/Skeleton_full_texture_Metallic.jpg"
+material Blind_Eye 1 1 1 spec=0.5 shininess=32 roughness=0.8 speccolor=1,1,1 metalness=0.8 albedomap="mesh/textures/Eye_Basecolor.png" normalmap="mesh/textures/Eye_Normal.png" normalstrength=1 roughnessmap="mesh/textures/Eye_Rough.png"
+material default 0.7 0.7 0.7 spec=0.5 shininess=32 roughness=0.5 speccolor=1,1,1 reflectivity=0.0
+material glass 0 0 0.3 spec=1 shininess=8 transmission=0.96 ior=1.5 reflectivity=0.04 roughness=0.0 absorption=1 absorbcolor=0,0,0.3
+
+# Meshes
+mesh mesh/Sceleton.obj 1 1 1 back material=glass
+mesh mesh/Plane.obj 1 1 1 back material=default translate=0,0,-2
+mesh mesh/Blind_Eye.obj 1 1 1 back material=Blind_Eye
+
